@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hero's Quest</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;
+      background: #1a1a2e;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    #game {
+      width: 900px;
+      height: 580px;
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 0 50px rgba(0,0,0,0.6);
+    }
+
+    /* ===== WORLD ===== */
+    #world {
+      width: 100%;
+      height: 60%;
+      position: relative;
+      background: linear-gradient(180deg, #5bc8f5 0%, #a8e4f7 100%);
+      overflow: hidden;
+    }
+
+    .cloud { position: absolute; background: white; border-radius: 40px; opacity: 0.9; }
+
+    #grass {
+      position: absolute;
+      bottom: 0; width: 100%; height: 65px;
+      background: linear-gradient(180deg, #5cb85c 0%, #3d8b3d 100%);
+    }
+
+    #road {
+      position: absolute;
+      bottom: 18px; width: 100%; height: 35px;
+      background: #8B6914;
+      border-top: 2px solid #a07820;
+    }
+
+    #road::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 0; right: 0;
+      border-top: 2px dashed rgba(255,255,255,0.25);
+    }
+
+    /* ===== CHECKPOINTS ===== */
+    .star-cp {
+      position: absolute;
+      bottom: 52px;
+      font-size: 22px;
+      filter: grayscale(1) opacity(0.45);
+      transition: filter 0.4s, transform 0.4s;
+      text-align: center;
+      width: 30px;
+    }
+
+    .star-cp.lit {
+      filter: none;
+      transform: scale(1.25);
+    }
+
+    /* ===== HEARTS & PROGRESS ===== */
+    #hearts {
+      position: absolute;
+      top: 8px; left: 10px;
+      display: flex; gap: 5px;
+      z-index: 10;
+    }
+
+    .heart { font-size: 22px; transition: opacity 0.3s, filter 0.3s; }
+    .heart.lost { opacity: 0.2; filter: grayscale(1); }
+
+    #progress {
+      position: absolute;
+      top: 8px; right: 10px;
+      color: white; font-size: 15px; font-weight: bold;
+      text-shadow: 1px 1px 3px #0005;
+    }
+
+    /* ===== HERO ===== */
+    #hero {
+      position: absolute;
+      bottom: 28px;
+      left: 5%;
+      width: 50px;
+      height: 80px;
+      z-index: 5;
+      transition: left 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #hero.walk      { animation: bob   0.9s ease; }
+    #hero.shake     { animation: shake 0.5s ease; }
+    #hero.celebrate { animation: jump  0.5s ease infinite alternate; }
+
+    @keyframes bob {
+      0%,100% { transform: translateY(0); }
+      25%      { transform: translateY(-10px); }
+      75%      { transform: translateY(-6px); }
+    }
+    @keyframes shake {
+      0%,100%  { transform: translateX(0); }
+      20%,60%  { transform: translateX(-8px); }
+      40%,80%  { transform: translateX(8px); }
+    }
+    @keyframes jump {
+      from { transform: translateY(0); }
+      to   { transform: translateY(-14px); }
+    }
+
+    /* ===== TREASURE CHEST ===== */
+    #chest-wrap {
+      position: absolute;
+      bottom: 46px;
+      right: 4%;
+      width: 62px; height: 60px;
+    }
+
+    #chest-lid {
+      transform-origin: 50% 100%;
+      transition: transform 0.6s ease;
+    }
+
+    .chest-open #chest-lid {
+      transform: rotate(-115deg);
+    }
+
+    /* ===== QUESTION PANEL ===== */
+    #panel {
+      width: 100%;
+      height: 40%;
+      background: linear-gradient(180deg, #2c3e50, #34495e);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 20px;
+    }
+
+    #q-type {
+      color: #95a5a6;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    #q-text {
+      color: white;
+      font-size: 21px;
+      text-align: center;
+      max-width: 700px;
+      line-height: 1.35;
+    }
+
+    #btns { display: flex; gap: 14px; }
+
+    .btn {
+      min-width: 160px;
+      padding: 11px 20px;
+      font-size: 17px;
+      font-family: inherit;
+      font-weight: bold;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      color: white;
+      transition: transform 0.1s;
+    }
+
+    .btn:hover:not(:disabled) { transform: scale(1.07); }
+    .btn:disabled { cursor: default; }
+
+    .btn-a { background: #27ae60; }
+    .btn-b { background: #2980b9; }
+    .btn-c { background: #e67e22; }
+
+    .btn.flash-ok { animation: flashOk 0.5s ease; }
+    .btn.flash-no { animation: flashNo 0.5s ease; }
+
+    @keyframes flashOk {
+      50% { background: #2ecc71; transform: scale(1.12); }
+    }
+    @keyframes flashNo {
+      50% { background: #e74c3c; transform: scale(0.93); }
+    }
+
+    /* ===== OVERLAYS ===== */
+    .overlay {
+      position: absolute; inset: 0;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 18px;
+      z-index: 50;
+    }
+
+    #win-screen  { background: rgba(39,174,96,0.93); }
+    #lose-screen { background: rgba(192,57,43,0.93); }
+
+    .overlay h1  { font-size: 46px; color: white; text-shadow: 2px 2px 8px #0004; }
+    .overlay p   { font-size: 20px; color: white; }
+
+    .overlay .play-btn {
+      padding: 14px 40px;
+      font-size: 20px;
+      font-family: inherit;
+      background: white;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: transform 0.1s;
+    }
+    .overlay .play-btn:hover { transform: scale(1.07); }
+
+    /* ===== CONFETTI ===== */
+    .confetti {
+      position: absolute;
+      width: 10px; height: 10px;
+      border-radius: 2px;
+      pointer-events: none;
+      animation: fall linear forwards;
+    }
+
+    @keyframes fall {
+      from { opacity: 1; transform: translateY(-20px) rotate(0deg); }
+      to   { opacity: 0; transform: translateY(620px) rotate(720deg); }
+    }
+  </style>
+</head>
+<body>
+
+<div id="game">
+
+  <!-- ===== WORLD ===== -->
+  <div id="world">
+
+    <!-- Clouds -->
+    <div class="cloud" style="width:90px;height:34px;top:14px;left:8%"></div>
+    <div class="cloud" style="width:60px;height:22px;top:26px;left:6.5%"></div>
+    <div class="cloud" style="width:110px;height:38px;top:18px;left:38%"></div>
+    <div class="cloud" style="width:70px;height:24px;top:10px;left:36.5%"></div>
+    <div class="cloud" style="width:80px;height:30px;top:22px;left:68%"></div>
+    <div class="cloud" style="width:55px;height:20px;top:14px;left:67%"></div>
+
+    <!-- Hearts -->
+    <div id="hearts">
+      <span class="heart" id="h1">❤️</span>
+      <span class="heart" id="h2">❤️</span>
+      <span class="heart" id="h3">❤️</span>
+      <span class="heart" id="h4">❤️</span>
+      <span class="heart" id="h5">❤️</span>
+    </div>
+
+    <!-- Progress -->
+    <div id="progress">⭐ 0 / 5</div>
+
+    <!-- Grass & Road -->
+    <div id="grass"></div>
+    <div id="road"></div>
+
+    <!-- Checkpoint stars -->
+    <div class="star-cp" id="cp1" style="left:17%">⭐</div>
+    <div class="star-cp" id="cp2" style="left:30%">⭐</div>
+    <div class="star-cp" id="cp3" style="left:43%">⭐</div>
+    <div class="star-cp" id="cp4" style="left:56%">⭐</div>
+    <div class="star-cp" id="cp5" style="left:69%">⭐</div>
+
+    <!-- Hero character (yellow suit, dark hair, green hands/feet) -->
+    <div id="hero">
+      <svg viewBox="0 0 50 80" xmlns="http://www.w3.org/2000/svg">
+        <!-- Dark hair base -->
+        <ellipse cx="25" cy="15" rx="13" ry="11" fill="#222"/>
+        <!-- Hair spikes -->
+        <polygon points="12,12 8,2 17,10"  fill="#222"/>
+        <polygon points="19,7  19,0 24,8"  fill="#222"/>
+        <polygon points="28,6  29,0 33,8"  fill="#222"/>
+        <polygon points="35,10 40,3 37,12" fill="#222"/>
+        <!-- Face -->
+        <ellipse cx="25" cy="19" rx="11" ry="10" fill="#FDBCB4"/>
+        <!-- Eyes -->
+        <circle cx="21" cy="17" r="2.5" fill="#222"/>
+        <circle cx="29" cy="17" r="2.5" fill="#222"/>
+        <circle cx="21.8" cy="16.3" r="1" fill="white"/>
+        <circle cx="29.8" cy="16.3" r="1" fill="white"/>
+        <!-- Smile -->
+        <path d="M20,23 Q25,28 30,23" stroke="#c0392b" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <!-- Yellow body suit -->
+        <rect x="14" y="28" width="22" height="26" rx="4" fill="#F1C40F"/>
+        <!-- Chest emblem -->
+        <polygon points="25,33 28,39 22,39" fill="#E67E22"/>
+        <!-- Belt -->
+        <rect x="14" y="47" width="22" height="5" rx="2" fill="#E67E22"/>
+        <!-- Arms (yellow) -->
+        <rect x="5"  y="29" width="10" height="21" rx="4" fill="#F1C40F"/>
+        <rect x="35" y="29" width="10" height="21" rx="4" fill="#F1C40F"/>
+        <!-- Hands (green) -->
+        <ellipse cx="10" cy="53" rx="5" ry="5" fill="#27AE60"/>
+        <ellipse cx="40" cy="53" rx="5" ry="5" fill="#27AE60"/>
+        <!-- Legs (dark) -->
+        <rect x="16" y="53" width="8" height="22" rx="3" fill="#2c3e50"/>
+        <rect x="26" y="53" width="8" height="22" rx="3" fill="#2c3e50"/>
+        <!-- Feet (green) -->
+        <ellipse cx="20" cy="75" rx="6" ry="4" fill="#27AE60"/>
+        <ellipse cx="30" cy="75" rx="6" ry="4" fill="#27AE60"/>
+      </svg>
+    </div>
+
+    <!-- Treasure Chest -->
+    <div id="chest-wrap">
+      <svg viewBox="0 0 62 58" xmlns="http://www.w3.org/2000/svg">
+        <!-- Chest body -->
+        <rect x="2" y="28" width="58" height="28" rx="4" fill="#8B4513"/>
+        <rect x="5" y="31" width="52" height="22" rx="2" fill="none" stroke="#FFD700" stroke-width="2"/>
+        <circle cx="31" cy="42" r="4" fill="#FFD700"/>
+        <rect x="29" y="45" width="4" height="5" fill="#FFD700"/>
+        <!-- Chest lid (animated on open) -->
+        <g id="chest-lid">
+          <rect x="2" y="7" width="58" height="24" rx="4" fill="#A0522D"/>
+          <ellipse cx="31" cy="8" rx="29" ry="8" fill="#A0522D"/>
+          <rect x="5" y="10" width="52" height="18" rx="2" fill="none" stroke="#FFD700" stroke-width="2"/>
+          <ellipse cx="31" cy="8" rx="25" ry="5" fill="none" stroke="#FFD700" stroke-width="1.5"/>
+        </g>
+        <!-- Coins: hidden until chest opens -->
+        <g id="coins" style="display:none">
+          <circle cx="18" cy="20" r="7" fill="#FFD700"/>
+          <circle cx="31" cy="13" r="7" fill="#FFD700"/>
+          <circle cx="44" cy="20" r="7" fill="#FFD700"/>
+          <text x="15" y="24" font-size="8" fill="#8B6914" font-family="sans-serif">$</text>
+          <text x="28" y="17" font-size="8" fill="#8B6914" font-family="sans-serif">$</text>
+          <text x="41" y="24" font-size="8" fill="#8B6914" font-family="sans-serif">$</text>
+        </g>
+      </svg>
+    </div>
+
+  </div><!-- /world -->
+
+  <!-- ===== QUESTION PANEL ===== -->
+  <div id="panel">
+    <div id="q-type">Loading...</div>
+    <div id="q-text">Get ready!</div>
+    <div id="btns">
+      <button class="btn btn-a" onclick="answer(0)">A) ?</button>
+      <button class="btn btn-b" onclick="answer(1)">B) ?</button>
+      <button class="btn btn-c" onclick="answer(2)">C) ?</button>
+    </div>
+  </div>
+
+  <!-- ===== WIN SCREEN ===== -->
+  <div class="overlay" id="win-screen">
+    <h1>🎉 You Win! 🎉</h1>
+    <p>You opened the treasure chest! Amazing!</p>
+    <button class="play-btn" onclick="resetGame()">Play Again 🌟</button>
+  </div>
+
+  <!-- ===== GAME OVER SCREEN ===== -->
+  <div class="overlay" id="lose-screen">
+    <h1>💔 Oh No!</h1>
+    <p>No more hearts! Keep trying, you can do it!</p>
+    <button class="play-btn" onclick="resetGame()">Try Again 💪</button>
+  </div>
+
+</div><!-- /game -->
+
+<script>
+// ================================================================
+// ✏️  EDIT YOUR QUESTIONS HERE
+//     ok: is the index of the correct answer (0 = A, 1 = B, 2 = C)
+// ================================================================
+const ALL_QUESTIONS = [
+  // --- MATH ---
+  { type: "Math ➕", q: "What is 3 + 4?",                           a: ["6",  "7",              "8"],    ok: 1 },
+  { type: "Math ➕", q: "What is 10 − 3?",                          a: ["6",  "7",              "8"],    ok: 1 },
+  { type: "Math ➕", q: "What comes after 15?",                     a: ["14", "16",             "17"],   ok: 1 },
+  { type: "Math ➕", q: "What is 2 + 2 + 2?",                       a: ["4",  "5",              "6"],    ok: 2 },
+  { type: "Math ➕", q: "How much is 5 + 5?",                       a: ["9",  "10",             "11"],   ok: 1 },
+  { type: "Math ➕", q: "What is 8 − 5?",                           a: ["2",  "3",              "4"],    ok: 1 },
+  { type: "Math ➕", q: "How many sides does a triangle have?",     a: ["2",  "4",              "3"],    ok: 2 },
+  { type: "Math ➕", q: "What is half of 10?",                      a: ["4",  "5",              "6"],    ok: 1 },
+  { type: "Math ➕", q: "Which number is bigger: 7 or 9?",          a: ["7",  "They are equal", "9"],    ok: 2 },
+  { type: "Math ➕", q: "How many days are in a week?",             a: ["5",  "6",              "7"],    ok: 2 },
+  { type: "Math ➕", q: "What is 4 + 3?",                           a: ["8",  "6",              "7"],    ok: 2 },
+  { type: "Math ➕", q: "How many wheels does a bicycle have?",     a: ["1",  "3",              "2"],    ok: 2 },
+
+  // --- SCIENCE ---
+  { type: "Science 🔬", q: "What do plants need to grow?",         a: ["Milk",      "Sunlight",    "Sand"],       ok: 1 },
+  { type: "Science 🔬", q: "Which animal lays eggs?",              a: ["Dog",       "Bird",        "Cat"],        ok: 1 },
+  { type: "Science 🔬", q: "What shape is the Moon?",              a: ["Square",    "Triangle",    "Round"],      ok: 2 },
+  { type: "Science 🔬", q: "How many legs does a spider have?",    a: ["6",         "4",           "8"],          ok: 2 },
+  { type: "Science 🔬", q: "What do fish use to breathe?",         a: ["Lungs",     "Gills",       "Nose"],       ok: 1 },
+  { type: "Science 🔬", q: "What color is the sky on a sunny day?",a: ["Green",     "Red",         "Blue"],       ok: 2 },
+  { type: "Science 🔬", q: "What do caterpillars turn into?",      a: ["Frogs",     "Butterflies", "Birds"],      ok: 1 },
+  { type: "Science 🔬", q: "What do we call frozen water?",        a: ["Steam",     "Ice",         "Mud"],        ok: 1 },
+  { type: "Science 🔬", q: "How many seasons are in a year?",      a: ["3",         "5",           "4"],          ok: 2 },
+  { type: "Science 🔬", q: "Which animal is the biggest?",         a: ["Elephant",  "Mouse",       "Cat"],        ok: 0 },
+  { type: "Science 🔬", q: "What do cows give us?",                a: ["Juice",     "Milk",        "Water"],      ok: 1 },
+  { type: "Science 🔬", q: "Where do fish live?",                  a: ["In trees",  "In the sky",  "In water"],   ok: 2 },
+];
+
+// ================================================================
+// ✏️  FINAL CHEST QUESTION — The boss question to open the chest!
+// ================================================================
+const CHEST_QUESTION = {
+  type: "⭐ Boss Question ⭐",
+  q:  "You have 4 apples. Your friend gives you 3 more, but you eat 2. How many apples do you have?",
+  a:  ["4", "5", "6"],
+  ok: 1   // 4 + 3 - 2 = 5 ✓
+};
+
+// ================================================================
+// GAME STATE
+// ================================================================
+
+// Hero left-position at each step (start → 5 checkpoints → chest)
+const STOPS = ['5%', '18%', '31%', '44%', '57%', '70%', '83%'];
+
+let state = {};
+
+function initGame() {
+  state = {
+    hearts:    5,
+    answered:  0,
+    questions: shuffle([...ALL_QUESTIONS]).slice(0, 5),
+    finalMode: false,
+    busy:      false,
+    current:   null,
+  };
+
+  renderHearts();
+  renderProgress();
+  resetHero();
+  resetStars();
+  resetChest();
+  setOverlay(null);
+  loadQuestion(state.questions[0]);
+}
+
+// ================================================================
+// QUESTION DISPLAY
+// ================================================================
+function loadQuestion(qObj) {
+  state.current = qObj;
+  document.getElementById('q-type').textContent = qObj.type;
+  document.getElementById('q-text').textContent = qObj.q;
+
+  const btns   = document.querySelectorAll('.btn');
+  const labels = ['A', 'B', 'C'];
+  btns.forEach((btn, i) => {
+    btn.textContent = labels[i] + ') ' + qObj.a[i];
+    btn.disabled    = false;
+    btn.className   = 'btn btn-' + ['a', 'b', 'c'][i];
+  });
+}
+
+// ================================================================
+// ANSWER HANDLING
+// ================================================================
+function answer(idx) {
+  if (state.busy || !state.current) return;
+  state.busy = true;
+
+  const btns = document.querySelectorAll('.btn');
+  btns.forEach(b => b.disabled = true);
+
+  const qObj = state.current;
+
+  if (idx === qObj.ok) {
+    // ✅ Correct
+    btns[idx].classList.add('flash-ok');
+    setTimeout(onCorrect, 600);
+  } else {
+    // ❌ Wrong — lose a heart
+    btns[idx].classList.add('flash-no');
+    state.hearts--;
+    renderHearts();
+    shakeHero();
+
+    if (state.hearts <= 0) {
+      setTimeout(() => setOverlay('lose-screen'), 900);
+    } else {
+      setTimeout(() => {
+        loadQuestion(qObj);   // same question again
+        state.busy = false;
+      }, 900);
+    }
+  }
+}
+
+function onCorrect() {
+  if (state.finalMode) {
+    // Final question answered — WIN!
+    moveHero(6, true, () => {
+      openChest();
+      setTimeout(() => setOverlay('win-screen'), 1200);
+    });
+    return;
+  }
+
+  state.answered++;
+  renderProgress();
+
+  moveHero(state.answered, true, () => {
+    // Light up the checkpoint star
+    const cp = document.getElementById('cp' + state.answered);
+    if (cp) cp.classList.add('lit');
+
+    if (state.answered >= 5) {
+      // All 5 done — show the chest (final boss) question
+      state.finalMode = true;
+      state.busy = false;
+      loadQuestion(CHEST_QUESTION);
+    } else {
+      state.busy = false;
+      loadQuestion(state.questions[state.answered]);
+    }
+  });
+}
+
+// ================================================================
+// HERO MOVEMENT
+// ================================================================
+function moveHero(stopIdx, animate, cb) {
+  const hero = document.getElementById('hero');
+  hero.classList.remove('walk', 'shake', 'celebrate');
+
+  if (!animate) {
+    // Instant jump (no CSS transition)
+    hero.style.transition = 'none';
+    hero.style.left = STOPS[stopIdx];
+    void hero.offsetWidth; // flush
+    hero.style.transition = '';
+    if (cb) cb();
+    return;
+  }
+
+  void hero.offsetWidth;
+  hero.classList.add('walk');
+  hero.style.left = STOPS[stopIdx];
+
+  setTimeout(() => {
+    hero.classList.remove('walk');
+    if (cb) cb();
+  }, 950);
+}
+
+function shakeHero() {
+  const hero = document.getElementById('hero');
+  hero.classList.remove('shake');
+  void hero.offsetWidth;
+  hero.classList.add('shake');
+  setTimeout(() => hero.classList.remove('shake'), 550);
+}
+
+function resetHero() {
+  const hero = document.getElementById('hero');
+  hero.classList.remove('walk', 'shake', 'celebrate');
+  moveHero(0, false);
+}
+
+// ================================================================
+// CHEST & CONFETTI
+// ================================================================
+function openChest() {
+  document.getElementById('chest-wrap').classList.add('chest-open');
+  document.getElementById('coins').style.display = 'block';
+  document.getElementById('hero').classList.add('celebrate');
+  spawnConfetti();
+}
+
+function resetChest() {
+  document.getElementById('chest-wrap').classList.remove('chest-open');
+  document.getElementById('coins').style.display = 'none';
+}
+
+function spawnConfetti() {
+  const colors = ['#F1C40F','#E74C3C','#3498DB','#2ECC71','#9B59B6','#E67E22','#ffffff'];
+  const game   = document.getElementById('game');
+
+  for (let i = 0; i < 55; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    el.style.cssText = `
+      left:${Math.random() * 100}%;
+      top:-12px;
+      background:${colors[i % colors.length]};
+      width:${6 + Math.random() * 10}px;
+      height:${6 + Math.random() * 10}px;
+      animation-duration:${1.5 + Math.random() * 2}s;
+      animation-delay:${Math.random() * 0.8}s;
+    `;
+    game.appendChild(el);
+    setTimeout(() => el.remove(), 4500);
+  }
+}
+
+// ================================================================
+// UI HELPERS
+// ================================================================
+function renderHearts() {
+  for (let i = 1; i <= 5; i++) {
+    document.getElementById('h' + i).classList.toggle('lost', i > state.hearts);
+  }
+}
+
+function renderProgress() {
+  document.getElementById('progress').textContent = `⭐ ${state.answered} / 5`;
+}
+
+function resetStars() {
+  for (let i = 1; i <= 5; i++) {
+    document.getElementById('cp' + i).classList.remove('lit');
+  }
+}
+
+function setOverlay(id) {
+  ['win-screen', 'lose-screen'].forEach(s => {
+    document.getElementById(s).style.display = (s === id) ? 'flex' : 'none';
+  });
+}
+
+function resetGame() {
+  document.querySelectorAll('.confetti').forEach(el => el.remove());
+  document.getElementById('hero').classList.remove('celebrate', 'walk', 'shake');
+  initGame();
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ================================================================
+// START
+// ================================================================
+window.addEventListener('load', initGame);
+</script>
+</body>
+</html>
