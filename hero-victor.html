@@ -75,7 +75,7 @@
     /* ===== HEARTS & PROGRESS ===== */
     #hearts {
       position: absolute;
-      top: 8px; left: 10px;
+      top: 40px; left: 10px;
       display: flex; gap: 5px;
       z-index: 10;
     }
@@ -85,7 +85,7 @@
 
     #progress {
       position: absolute;
-      top: 8px; right: 10px;
+      top: 40px; right: 10px;
       color: white; font-size: 15px; font-weight: bold;
       text-shadow: 1px 1px 3px #0005;
     }
@@ -250,44 +250,6 @@
       100% { background: inherit; transform: scale(1); }
     }
 
-    /* ===== TIC-TAC-TOE STYLING ===== */
-    .ttt-cell {
-      width: 70px;
-      height: 70px;
-      font-size: 32px;
-      font-weight: bold;
-      border: 3px solid #3498db;
-      background: linear-gradient(135deg, #34495e, #2c3e50);
-      color: white;
-      cursor: pointer;
-      border-radius: 8px;
-      transition: all 0.2s ease;
-      font-family: inherit;
-    }
-
-    .ttt-cell:hover:not(:disabled) {
-      transform: scale(1.08);
-      background: linear-gradient(135deg, #4a5f7f, #3d4f60);
-      box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
-    }
-
-    .ttt-cell:disabled {
-      cursor: not-allowed;
-    }
-
-    #tic-tac-toe-panel {
-      width: 100%;
-      height: 40%;
-      background: linear-gradient(180deg, #2c3e50, #34495e);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 20px;
-      border-top: 2px solid #1a252f;
-    }
-
     /* ===== OVERLAYS ===== */
     .overlay {
       position: absolute; inset: 0;
@@ -399,7 +361,7 @@
     /* ===== COIN COUNTER ===== */
     #coin-display {
       position: absolute;
-      top: 45px; left: 10px;
+      top: 8px; left: 10px;
       color: #FFD700; font-size: 18px; font-weight: bold;
       text-shadow: 1px 1px 3px #0005;
       z-index: 10;
@@ -574,25 +536,6 @@
     <div id="feedback"></div>
   </div>
 
-  <!-- ===== TIC-TAC-TOE GAME ===== -->
-  <div id="tic-tac-toe-panel" style="display: none;">
-    <div style="color: #f39c12; font-size: 13px; text-transform: uppercase; letter-spacing: 2px; font-weight: bold;">🎮 Noughts & Crosses 🎮</div>
-    <div style="color: white; font-size: 16px; margin: 8px 0;">You: X | AI: O</div>
-    <div id="ttt-board" style="display: grid; grid-template-columns: repeat(3, 70px); gap: 8px; margin: 10px auto; padding: 10px;">
-      <button class="ttt-cell" onclick="playTTT(0)"></button>
-      <button class="ttt-cell" onclick="playTTT(1)"></button>
-      <button class="ttt-cell" onclick="playTTT(2)"></button>
-      <button class="ttt-cell" onclick="playTTT(3)"></button>
-      <button class="ttt-cell" onclick="playTTT(4)"></button>
-      <button class="ttt-cell" onclick="playTTT(5)"></button>
-      <button class="ttt-cell" onclick="playTTT(6)"></button>
-      <button class="ttt-cell" onclick="playTTT(7)"></button>
-      <button class="ttt-cell" onclick="playTTT(8)"></button>
-    </div>
-    <div id="ttt-feedback" style="color: white; font-size: 14px; height: 25px; margin: 5px 0; font-weight: bold;"></div>
-    <button class="btn" style="background: #9B59B6; min-width: 140px;" onclick="resetGame()">Back to Menu</button>
-  </div>
-
   <!-- ===== DIFFICULTY SELECTOR ===== -->
   <div class="overlay" id="difficulty-screen">
     <h1>Choose Difficulty 🎮</h1>
@@ -601,18 +544,6 @@
       <button class="difficulty-btn btn-easy" onclick="startGame('easy')">🌱 Easy</button>
       <button class="difficulty-btn btn-normal" onclick="startGame('normal')">⭐ Normal</button>
       <button class="difficulty-btn btn-hard" onclick="startGame('hard')">🔥 Hard</button>
-    </div>
-  </div>
-
-  <!-- ===== GAME SELECTION (After Trivia Win) ===== -->
-  <div class="overlay" id="game-selection-screen">
-    <h1>🎉 You Won! 🎉</h1>
-    <p>What would you like to play next?</p>
-    <div class="difficulty-buttons" style="flex-direction: column; gap: 10px; width: 280px;">
-      <button class="difficulty-btn btn-normal" style="width: 100%; background: linear-gradient(135deg, #3498db, #2980b9);" onclick="startTicTacToe()">🎮 Play Noughts & Crosses</button>
-      <button class="difficulty-btn btn-easy" style="width: 100%;" onclick="startGame('easy')">🌱 Try Another Trivia (Easy)</button>
-      <button class="difficulty-btn btn-normal" style="width: 100%;" onclick="startGame('normal')">⭐ Try Another Trivia (Normal)</button>
-      <button class="difficulty-btn btn-hard" style="width: 100%;" onclick="startGame('hard')">🔥 Try Another Trivia (Hard)</button>
     </div>
   </div>
 
@@ -740,6 +671,12 @@ const ALL_QUESTIONS = [
   { type: "Science 🔬", q: "How many teeth do adult humans have?",  a: ["28",   "32",             "36"],   ok: 1, difficulty: "hard" },
   { type: "Science 🔬", q: "What is the speed of sound?",          a: ["300 m/s", "343 m/s",     "500 m/s"],ok: 1, difficulty: "hard" },
   { type: "Science 🔬", q: "How long does it take Earth to orbit the Sun?",a: ["360 days", "365 days", "370 days"],ok: 1, difficulty: "hard" },
+
+  // --- GAME PUZZLES (Tic-Tac-Toe strategy questions) ---
+  { type: "🎮 Game Puzzle", q: "In tic-tac-toe, where should you place your first X? (Center is best)", a: ["Corner", "Center", "Edge"], ok: 1, difficulty: "easy" },
+  { type: "🎮 Game Puzzle", q: "If opponent takes center, what's the best response?", a: ["Take corner", "Block them", "Take edge"], ok: 0, difficulty: "normal" },
+  { type: "🎮 Game Puzzle", q: "How many possible winning lines are there in tic-tac-toe?", a: ["6", "8", "10"], ok: 1, difficulty: "normal" },
+  { type: "🎮 Game Puzzle", q: "What's the maximum number of moves before someone wins?", a: ["5", "7", "9"], ok: 0, difficulty: "hard" },
 ];
 
 // ================================================================
@@ -870,7 +807,6 @@ function startGame(difficulty) {
   };
 
   document.getElementById('panel').style.display = 'flex';
-  document.getElementById('tic-tac-toe-panel').style.display = 'none';
   renderHearts();
   renderProgress();
   renderStreak();
@@ -898,10 +834,20 @@ function loadQuestion(qObj) {
   document.getElementById('q-text').textContent = qObj.q;
   document.getElementById('feedback').textContent = '';  // clear feedback
 
+  // Shuffle answers and track new correct index
+  const answerIndices = [0, 1, 2];
+  const shuffledIndices = shuffle([...answerIndices]);
+  const newAnswers = shuffledIndices.map(i => qObj.a[i]);
+  const newCorrectIndex = shuffledIndices.indexOf(qObj.ok);
+
+  // Store current question with shuffled answers
+  state.current.a = newAnswers;
+  state.current.ok = newCorrectIndex;
+
   const btns   = document.querySelectorAll('.btn');
   const labels = ['A', 'B', 'C'];
   btns.forEach((btn, i) => {
-    btn.textContent = labels[i] + ') ' + qObj.a[i];
+    btn.textContent = labels[i] + ') ' + state.current.a[i];
     btn.disabled    = false;
     btn.className   = 'btn btn-' + ['a', 'b', 'c'][i];
   });
@@ -966,11 +912,11 @@ function answer(idx) {
 
 function onCorrect() {
   if (state.finalMode) {
-    // Final question answered — show game selection
+    // Final question answered — WIN!
     moveHero(6, true, () => {
       movePet(6, false);
       openChest();
-      setTimeout(() => setOverlay('game-selection-screen'), 1200);
+      setTimeout(() => setOverlay('win-screen'), 1200);
     });
     return;
   }
@@ -1170,7 +1116,7 @@ function resetStars() {
 }
 
 function setOverlay(id) {
-  ['difficulty-screen', 'game-selection-screen', 'win-screen', 'lose-screen'].forEach(s => {
+  ['difficulty-screen', 'win-screen', 'lose-screen'].forEach(s => {
     document.getElementById(s).style.display = (s === id) ? 'flex' : 'none';
   });
 
@@ -1189,8 +1135,6 @@ function resetGame() {
   document.querySelectorAll('.confetti').forEach(el => el.remove());
   document.getElementById('hero').classList.remove('celebrate', 'walk', 'shake');
   document.getElementById('pet').classList.remove('celebrate');
-  document.getElementById('panel').style.display = 'flex';
-  document.getElementById('tic-tac-toe-panel').style.display = 'none';
   setOverlay('difficulty-screen');
 }
 
@@ -1243,181 +1187,6 @@ function highlightButton(idx) {
     btn.style.outline = (i === idx) ? '3px solid white' : 'none';
     btn.style.outlineOffset = (i === idx) ? '2px' : '0';
   });
-}
-
-// ================================================================
-// TIC-TAC-TOE GAME
-// ================================================================
-let tttState = {
-  board: Array(9).fill(''),
-  playerWins: 0,
-  aiWins: 0,
-  isPlayerTurn: true,
-  gameActive: true,
-};
-
-function startTicTacToe() {
-  resetTTT();
-  resetHero();
-  resetPet();
-  resetStars();
-  resetChest();
-  document.getElementById('panel').style.display = 'none';
-  document.getElementById('tic-tac-toe-panel').style.display = 'flex';
-  setOverlay(null);
-}
-
-function resetTTT() {
-  tttState = {
-    board: Array(9).fill(''),
-    playerWins: tttState.playerWins || 0,
-    aiWins: tttState.aiWins || 0,
-    isPlayerTurn: true,
-    gameActive: true,
-  };
-  renderTTTBoard();
-  document.getElementById('ttt-feedback').textContent = 'Your turn! Place an X';
-}
-
-function playTTT(index) {
-  if (!tttState.gameActive || tttState.board[index] !== '' || !tttState.isPlayerTurn) {
-    return;
-  }
-
-  // Player move
-  tttState.board[index] = 'X';
-  renderTTTBoard();
-
-  // Check for player win or draw
-  const result = checkTTTWinner();
-  if (result === 'X') {
-    tttState.gameActive = false;
-    tttState.playerWins++;
-    document.getElementById('ttt-feedback').textContent = '✅ You Win! Playing another round...';
-    setTimeout(resetTTT, 2000);
-    return;
-  }
-  if (result === 'draw') {
-    tttState.gameActive = false;
-    document.getElementById('ttt-feedback').textContent = "🤝 It's a Draw! Playing another round...";
-    setTimeout(resetTTT, 2000);
-    return;
-  }
-
-  // AI turn
-  tttState.isPlayerTurn = false;
-  document.getElementById('ttt-feedback').textContent = 'AI thinking...';
-  setTimeout(() => {
-    makeAIMove();
-    renderTTTBoard();
-
-    // Check for AI win or draw
-    const aiResult = checkTTTWinner();
-    if (aiResult === 'O') {
-      tttState.gameActive = false;
-      tttState.aiWins++;
-      document.getElementById('ttt-feedback').textContent = '❌ AI Wins! Playing another round...';
-      setTimeout(resetTTT, 2000);
-      return;
-    }
-    if (aiResult === 'draw') {
-      tttState.gameActive = false;
-      document.getElementById('ttt-feedback').textContent = "🤝 It's a Draw! Playing another round...";
-      setTimeout(resetTTT, 2000);
-      return;
-    }
-
-    // Back to player turn
-    tttState.isPlayerTurn = true;
-    document.getElementById('ttt-feedback').textContent = 'Your turn!';
-  }, 800);
-}
-
-function makeAIMove() {
-  // Simple AI: try to win, block player, prioritize center, then random
-  const emptySpaces = tttState.board
-    .map((val, idx) => (val === '' ? idx : null))
-    .filter(val => val !== null);
-
-  if (emptySpaces.length === 0) return;
-
-  // Try to win
-  for (let space of emptySpaces) {
-    tttState.board[space] = 'O';
-    if (checkTTTWinner() === 'O') {
-      return;
-    }
-    tttState.board[space] = '';
-  }
-
-  // Block player
-  for (let space of emptySpaces) {
-    tttState.board[space] = 'X';
-    if (checkTTTWinner() === 'X') {
-      tttState.board[space] = 'O';
-      return;
-    }
-    tttState.board[space] = '';
-  }
-
-  // Prefer center if available
-  if (emptySpaces.includes(4)) {
-    tttState.board[4] = 'O';
-    return;
-  }
-
-  // Prefer corners
-  const corners = [0, 2, 6, 8].filter(idx => emptySpaces.includes(idx));
-  if (corners.length > 0) {
-    tttState.board[corners[Math.floor(Math.random() * corners.length)]] = 'O';
-    return;
-  }
-
-  // Random move
-  const move = emptySpaces[Math.floor(Math.random() * emptySpaces.length)];
-  tttState.board[move] = 'O';
-}
-
-function checkTTTWinner() {
-  const winCombos = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6],
-  ];
-
-  for (let combo of winCombos) {
-    const [a, b, c] = combo;
-    if (
-      tttState.board[a] !== '' &&
-      tttState.board[a] === tttState.board[b] &&
-      tttState.board[b] === tttState.board[c]
-    ) {
-      return tttState.board[a];
-    }
-  }
-
-  if (tttState.board.every(cell => cell !== '')) {
-    return 'draw';
-  }
-
-  return null;
-}
-
-function renderTTTBoard() {
-  const cells = document.querySelectorAll('.ttt-cell');
-  cells.forEach((cell, idx) => {
-    cell.textContent = tttState.board[idx];
-    cell.style.color = tttState.board[idx] === 'X' ? '#3498db' : tttState.board[idx] === 'O' ? '#e74c3c' : 'white';
-    cell.disabled = tttState.board[idx] !== '';
-  });
-
-  // Update score display
-  document.querySelector('#tic-tac-toe-panel > div:nth-child(2)').textContent = `You: ${tttState.playerWins} | AI: ${tttState.aiWins}`;
 }
 
 // ================================================================
