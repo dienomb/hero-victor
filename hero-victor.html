@@ -116,8 +116,10 @@
       40%,80%  { transform: translateX(8px); }
     }
     @keyframes jump {
-      from { transform: translateY(0); }
-      to   { transform: translateY(-14px); }
+      0%, 100% { transform: translateY(0) rotateZ(0deg); }
+      25% { transform: translateY(-18px) rotateZ(-5deg); }
+      50% { transform: translateY(-20px) rotateZ(5deg); }
+      75% { transform: translateY(-15px) rotateZ(-3deg); }
     }
 
     /* ===== TREASURE CHEST ===== */
@@ -148,13 +150,16 @@
       align-items: center;
       gap: 12px;
       padding: 10px 20px;
+      border-top: 2px solid #1a252f;
     }
 
     #q-type {
-      color: #95a5a6;
-      font-size: 12px;
+      color: #f39c12;
+      font-size: 13px;
       text-transform: uppercase;
       letter-spacing: 2px;
+      font-weight: bold;
+      animation: fadeIn 0.5s ease;
     }
 
     #q-text {
@@ -163,6 +168,12 @@
       text-align: center;
       max-width: 700px;
       line-height: 1.35;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     #btns { display: flex; gap: 14px; }
@@ -173,28 +184,53 @@
       font-size: 17px;
       font-family: inherit;
       font-weight: bold;
-      border: none;
+      border: 3px solid transparent;
       border-radius: 12px;
       cursor: pointer;
       color: white;
-      transition: transform 0.1s;
+      transition: all 0.15s ease;
+      position: relative;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
 
-    .btn:hover:not(:disabled) { transform: scale(1.07); }
-    .btn:disabled { cursor: default; }
+    .btn:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+    }
+
+    .btn:active:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .btn:disabled {
+      cursor: default;
+      opacity: 0.6;
+    }
+
+    .btn:focus {
+      outline: none;
+      border-color: white;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.3), inset 0 0 0 2px rgba(255,255,255,0.3);
+    }
 
     .btn-a { background: #27ae60; }
     .btn-b { background: #2980b9; }
     .btn-c { background: #e67e22; }
 
-    .btn.flash-ok { animation: flashOk 0.5s ease; }
-    .btn.flash-no { animation: flashNo 0.5s ease; }
+    .btn.flash-ok { animation: flashOk 0.6s ease; }
+    .btn.flash-no { animation: flashNo 0.6s ease; }
 
     @keyframes flashOk {
-      50% { background: #2ecc71; transform: scale(1.12); }
+      0% { background: inherit; }
+      50% { background: #2ecc71; transform: scale(1.15); box-shadow: 0 8px 16px rgba(46, 204, 113, 0.5); }
+      100% { background: inherit; transform: scale(1); }
     }
     @keyframes flashNo {
-      50% { background: #e74c3c; transform: scale(0.93); }
+      0% { background: inherit; }
+      25%, 75% { background: #e74c3c; transform: scale(0.95) translateX(-5px); }
+      50% { transform: translateX(5px); }
+      100% { background: inherit; transform: scale(1); }
     }
 
     /* ===== OVERLAYS ===== */
