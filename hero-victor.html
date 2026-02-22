@@ -302,8 +302,11 @@
       <span class="heart" id="h5">❤️</span>
     </div>
 
-    <!-- Progress -->
+    <!-- Progress & Stats -->
     <div id="progress">⭐ 0 / 5</div>
+    <div id="stats">
+      <span id="streak" style="font-size: 12px; color: #2ecc71; font-weight: bold; margin-left: 20px;">🔥 Streak: 0</span>
+    </div>
 
     <!-- Grass & Road -->
     <div id="grass"></div>
@@ -400,6 +403,10 @@
   <div class="overlay" id="win-screen">
     <h1>🎉 You Win! 🎉</h1>
     <p>You opened the treasure chest! Amazing!</p>
+    <div id="win-stats" style="font-size: 16px; color: white; margin: 10px 0;">
+      <div>Correct: <span id="win-correct">0</span> / <span id="win-total">0</span></div>
+      <div>Accuracy: <span id="win-accuracy">0%</span></div>
+    </div>
     <button class="play-btn" onclick="resetGame()">Play Again 🌟</button>
   </div>
 
@@ -407,6 +414,10 @@
   <div class="overlay" id="lose-screen">
     <h1>💔 Oh No!</h1>
     <p>No more hearts! Keep trying, you can do it!</p>
+    <div id="lose-stats" style="font-size: 16px; color: white; margin: 10px 0;">
+      <div>Correct: <span id="lose-correct">0</span> / <span id="lose-total">0</span></div>
+      <div>Accuracy: <span id="lose-accuracy">0%</span></div>
+    </div>
     <button class="play-btn" onclick="resetGame()">Try Again 💪</button>
   </div>
 
@@ -470,6 +481,9 @@ function initGame() {
   state = {
     hearts:    5,
     answered:  0,
+    streak:    0,        // consecutive correct answers
+    total:     0,        // total answers given
+    correct:   0,        // total correct answers
     questions: shuffle([...ALL_QUESTIONS]).slice(0, 5),
     finalMode: false,
     busy:      false,
@@ -478,6 +492,7 @@ function initGame() {
 
   renderHearts();
   renderProgress();
+  renderStreak();
   resetHero();
   resetStars();
   resetChest();
@@ -514,12 +529,19 @@ function answer(idx) {
 
   const qObj = state.current;
 
+  state.total++;
+
   if (idx === qObj.ok) {
     // ✅ Correct
+    state.correct++;
+    state.streak++;
+    renderStreak();
     btns[idx].classList.add('flash-ok');
     setTimeout(onCorrect, 600);
   } else {
     // ❌ Wrong — lose a heart
+    state.streak = 0;  // reset streak on wrong answer
+    renderStreak();
     btns[idx].classList.add('flash-no');
     state.hearts--;
     renderHearts();
@@ -656,6 +678,17 @@ function renderProgress() {
   document.getElementById('progress').textContent = `⭐ ${state.answered} / 5`;
 }
 
+function renderStreak() {
+  const streakEl = document.getElementById('streak');
+  if (state.streak > 0) {
+    streakEl.textContent = `🔥 Streak: ${state.streak}`;
+    streakEl.style.color = state.streak >= 3 ? '#f39c12' : '#2ecc71';
+  } else {
+    streakEl.textContent = '🔥 Streak: 0';
+    streakEl.style.color = '#95a5a6';
+  }
+}
+
 function resetStars() {
   for (let i = 1; i <= 5; i++) {
     document.getElementById('cp' + i).classList.remove('lit');
@@ -666,6 +699,14 @@ function setOverlay(id) {
   ['win-screen', 'lose-screen'].forEach(s => {
     document.getElementById(s).style.display = (s === id) ? 'flex' : 'none';
   });
+
+  // Update stats on display
+  if (id === 'win-screen' || id === 'lose-screen') {
+    const accuracy = state.total > 0 ? Math.round((state.correct / state.total) * 100) : 0;
+    document.getElementById(id.replace('-screen', '') + '-correct').textContent = state.correct;
+    document.getElementById(id.replace('-screen', '') + '-total').textContent = state.total;
+    document.getElementById(id.replace('-screen', '') + '-accuracy').textContent = accuracy + '%';
+  }
 }
 
 function resetGame() {
