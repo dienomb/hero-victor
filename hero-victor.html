@@ -261,8 +261,49 @@
       z-index: 50;
     }
 
+    #difficulty-screen { background: rgba(41,128,185,0.95); }
     #win-screen  { background: rgba(39,174,96,0.93); }
     #lose-screen { background: rgba(192,57,43,0.93); }
+
+    .difficulty-buttons {
+      display: flex;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .difficulty-btn {
+      padding: 16px 32px;
+      font-size: 18px;
+      font-family: inherit;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      color: white;
+      transition: all 0.2s;
+      min-width: 120px;
+    }
+
+    .difficulty-btn:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    }
+
+    .difficulty-btn:active {
+      transform: translateY(-2px);
+    }
+
+    .btn-easy {
+      background: linear-gradient(135deg, #2ecc71, #27ae60);
+    }
+
+    .btn-normal {
+      background: linear-gradient(135deg, #f39c12, #e67e22);
+    }
+
+    .btn-hard {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+    }
 
     .overlay h1  { font-size: 46px; color: white; text-shadow: 2px 2px 8px #0004; }
     .overlay p   { font-size: 20px; color: white; }
@@ -322,6 +363,7 @@
     <!-- Progress & Stats -->
     <div id="progress">⭐ 0 / 5</div>
     <div id="stats">
+      <span id="difficulty-badge" style="font-size: 11px; color: #f39c12; font-weight: bold; background: rgba(0,0,0,0.3); padding: 3px 8px; border-radius: 12px; margin-left: 10px;">Normal</span>
       <span id="streak" style="font-size: 12px; color: #2ecc71; font-weight: bold; margin-left: 20px;">🔥 Streak: 0</span>
     </div>
 
@@ -415,6 +457,17 @@
       <button class="btn btn-c" onclick="answer(2)">C) ?</button>
     </div>
     <div id="feedback"></div>
+  </div>
+
+  <!-- ===== DIFFICULTY SELECTOR ===== -->
+  <div class="overlay" id="difficulty-screen">
+    <h1>Choose Difficulty 🎮</h1>
+    <p>Select your challenge level!</p>
+    <div class="difficulty-buttons">
+      <button class="difficulty-btn btn-easy" onclick="startGame('easy')">🌱 Easy</button>
+      <button class="difficulty-btn btn-normal" onclick="startGame('normal')">⭐ Normal</button>
+      <button class="difficulty-btn btn-hard" onclick="startGame('hard')">🔥 Hard</button>
+    </div>
   </div>
 
   <!-- ===== WIN SCREEN ===== -->
@@ -542,13 +595,30 @@ const ALL_QUESTIONS = [
 ];
 
 // ================================================================
-// ✏️  FINAL CHEST QUESTION — The boss question to open the chest!
+// ✏️  FINAL CHEST QUESTIONS — The boss questions to open the chest!
 // ================================================================
-const CHEST_QUESTION = {
-  type: "⭐ Boss Question ⭐",
-  q:  "You have 4 apples. Your friend gives you 3 more, but you eat 2. How many apples do you have?",
-  a:  ["4", "5", "6"],
-  ok: 1   // 4 + 3 - 2 = 5 ✓
+const CHEST_QUESTIONS = {
+  easy: {
+    type: "⭐ Boss Question ⭐",
+    q:  "You have 4 apples. Your friend gives you 3 more, but you eat 2. How many apples do you have?",
+    a:  ["4", "5", "6"],
+    ok: 1,  // 4 + 3 - 2 = 5 ✓
+    difficulty: "easy"
+  },
+  normal: {
+    type: "⭐ Boss Question ⭐",
+    q:  "You read 15 pages on Monday and 27 pages on Tuesday. How many pages total?",
+    a:  ["40", "42", "45"],
+    ok: 1,  // 15 + 27 = 42 ✓
+    difficulty: "normal"
+  },
+  hard: {
+    type: "⭐ Boss Question ⭐",
+    q:  "A recipe needs 2.5 cups of flour for 8 cookies. How many cups for 16 cookies?",
+    a:  ["3 cups", "5 cups", "7.5 cups"],
+    ok: 1,  // 2.5 × 2 = 5 ✓
+    difficulty: "hard"
+  }
 };
 
 // ================================================================
@@ -560,14 +630,18 @@ const STOPS = ['5%', '18%', '31%', '44%', '57%', '70%', '83%'];
 
 let state = {};
 
-function initGame() {
+function startGame(difficulty) {
+  // Filter questions by difficulty
+  const filteredQuestions = ALL_QUESTIONS.filter(q => q.difficulty === difficulty);
+
   state = {
     hearts:    5,
     answered:  0,
     streak:    0,        // consecutive correct answers
     total:     0,        // total answers given
     correct:   0,        // total correct answers
-    questions: shuffle([...ALL_QUESTIONS]).slice(0, 5),
+    difficulty: difficulty,
+    questions: shuffle([...filteredQuestions]).slice(0, 5),
     finalMode: false,
     busy:      false,
     current:   null,
@@ -576,11 +650,17 @@ function initGame() {
   renderHearts();
   renderProgress();
   renderStreak();
+  renderDifficultyBadge();
   resetHero();
   resetStars();
   resetChest();
   setOverlay(null);
   loadQuestion(state.questions[0]);
+}
+
+function initGame() {
+  // Show difficulty selector on first load
+  setOverlay('difficulty-screen');
 }
 
 // ================================================================
@@ -669,7 +749,8 @@ function onCorrect() {
       // All 5 done — show the chest (final boss) question
       state.finalMode = true;
       state.busy = false;
-      loadQuestion(CHEST_QUESTION);
+      const chestQuestion = CHEST_QUESTIONS[state.difficulty];
+      loadQuestion(chestQuestion);
     } else {
       state.busy = false;
       loadQuestion(state.questions[state.answered]);
@@ -778,6 +859,14 @@ function renderStreak() {
   }
 }
 
+function renderDifficultyBadge() {
+  const badge = document.getElementById('difficulty-badge');
+  const diffIcons = { easy: '🌱 Easy', normal: '⭐ Normal', hard: '🔥 Hard' };
+  const diffColors = { easy: '#2ecc71', normal: '#f39c12', hard: '#e74c3c' };
+  badge.textContent = diffIcons[state.difficulty] || 'Normal';
+  badge.style.color = diffColors[state.difficulty] || '#f39c12';
+}
+
 function showFeedback(type, message) {
   const feedbackEl = document.getElementById('feedback');
   feedbackEl.textContent = message;
@@ -791,7 +880,7 @@ function resetStars() {
 }
 
 function setOverlay(id) {
-  ['win-screen', 'lose-screen'].forEach(s => {
+  ['difficulty-screen', 'win-screen', 'lose-screen'].forEach(s => {
     document.getElementById(s).style.display = (s === id) ? 'flex' : 'none';
   });
 
@@ -807,7 +896,7 @@ function setOverlay(id) {
 function resetGame() {
   document.querySelectorAll('.confetti').forEach(el => el.remove());
   document.getElementById('hero').classList.remove('celebrate', 'walk', 'shake');
-  initGame();
+  setOverlay('difficulty-screen');
 }
 
 function shuffle(arr) {
