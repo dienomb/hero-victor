@@ -372,6 +372,53 @@
       from { opacity: 1; transform: translateY(-20px) rotate(0deg); }
       to   { opacity: 0; transform: translateY(620px) rotate(720deg); }
     }
+
+    /* ===== PET COMPANION ===== */
+    #pet {
+      position: absolute;
+      bottom: 28px;
+      left: 10%;
+      width: 45px;
+      height: 45px;
+      z-index: 4;
+      transition: left 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #pet.celebrate { animation: petJump 0.5s ease infinite alternate; }
+    #pet.hop { animation: petHop 0.4s ease; }
+
+    @keyframes petJump {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-12px) scale(1.1); }
+    }
+    @keyframes petHop {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    /* ===== COIN COUNTER ===== */
+    #coin-display {
+      position: absolute;
+      top: 45px; left: 10px;
+      color: #FFD700; font-size: 18px; font-weight: bold;
+      text-shadow: 1px 1px 3px #0005;
+      z-index: 10;
+    }
+
+    .coin-popup {
+      position: absolute;
+      font-size: 20px;
+      font-weight: bold;
+      color: #FFD700;
+      pointer-events: none;
+      animation: coinFloat 0.8s ease-out forwards;
+      text-shadow: 1px 1px 2px #0005;
+    }
+
+    @keyframes coinFloat {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-40px) scale(0.7); }
+    }
   </style>
 </head>
 <body>
@@ -388,6 +435,9 @@
     <div class="cloud" style="width:70px;height:24px;top:45px;left:36.5%"></div>
     <div class="cloud" style="width:80px;height:30px;top:60px;left:68%"></div>
     <div class="cloud" style="width:55px;height:20px;top:50px;left:67%"></div>
+
+    <!-- Coin Display -->
+    <div id="coin-display">💰 0</div>
 
     <!-- Hearts -->
     <div id="hearts">
@@ -415,6 +465,33 @@
     <div class="star-cp" id="cp3" style="left:43%">⭐</div>
     <div class="star-cp" id="cp4" style="left:56%">⭐</div>
     <div class="star-cp" id="cp5" style="left:69%">⭐</div>
+
+    <!-- Pet Companion -->
+    <div id="pet">
+      <svg viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg">
+        <!-- Dog body -->
+        <ellipse cx="22" cy="26" rx="12" ry="14" fill="#D4A574"/>
+        <!-- Dog head -->
+        <circle cx="22" cy="14" r="10" fill="#D4A574"/>
+        <!-- Ears -->
+        <ellipse cx="16" cy="6" rx="4" ry="7" fill="#8B6F47"/>
+        <ellipse cx="28" cy="6" rx="4" ry="7" fill="#8B6F47"/>
+        <!-- Eyes -->
+        <circle cx="19" cy="12" r="2" fill="black"/>
+        <circle cx="25" cy="12" r="2" fill="black"/>
+        <circle cx="19.5" cy="11.3" r="0.8" fill="white"/>
+        <circle cx="25.5" cy="11.3" r="0.8" fill="white"/>
+        <!-- Nose -->
+        <ellipse cx="22" cy="16" rx="1.5" ry="1.8" fill="black"/>
+        <!-- Mouth/tongue -->
+        <path d="M22,16 Q20,19 18,18" stroke="#FF69B4" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <!-- Tail -->
+        <path d="M32,28 Q38,26 40,20" stroke="#D4A574" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <!-- Front paws -->
+        <ellipse cx="18" cy="38" rx="2.5" ry="4" fill="#8B6F47"/>
+        <ellipse cx="26" cy="38" rx="2.5" ry="4" fill="#8B6F47"/>
+      </svg>
+    </div>
 
     <!-- Hero character (yellow suit, dark hair, green hands/feet) -->
     <div id="hero">
@@ -546,6 +623,7 @@
     <div id="win-stats" style="font-size: 16px; color: white; margin: 10px 0;">
       <div>Correct: <span id="win-correct">0</span> / <span id="win-total">0</span></div>
       <div>Accuracy: <span id="win-accuracy">0%</span></div>
+      <div style="margin-top: 8px; font-size: 18px;">💰 Coins Earned: <span id="win-coins">0</span></div>
     </div>
     <button class="play-btn" onclick="resetGame()">Play Again 🌟</button>
   </div>
@@ -557,6 +635,7 @@
     <div id="lose-stats" style="font-size: 16px; color: white; margin: 10px 0;">
       <div>Correct: <span id="lose-correct">0</span> / <span id="lose-total">0</span></div>
       <div>Accuracy: <span id="lose-accuracy">0%</span></div>
+      <div style="margin-top: 8px; font-size: 18px;">💰 Coins Earned: <span id="lose-coins">0</span></div>
     </div>
     <button class="play-btn" onclick="resetGame()">Try Again 💪</button>
   </div>
@@ -699,6 +778,79 @@ const STOPS = ['5%', '18%', '31%', '44%', '57%', '70%', '83%'];
 
 let state = {};
 
+// ================================================================
+// SOUND EFFECTS SYSTEM
+// ================================================================
+function playSound(type) {
+  // Use Web Audio API to create simple beep sounds
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  const oscillator = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+
+  oscillator.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+
+  const now = audioContext.currentTime;
+
+  switch(type) {
+    case 'correct':
+      // Happy ascending beep
+      oscillator.frequency.setValueAtTime(523, now);      // C5
+      oscillator.frequency.setTargetAtTime(659, now+0.05, 0.1); // E5
+      gainNode.gain.setValueAtTime(0.3, now);
+      gainNode.gain.setTargetAtTime(0, now + 0.15, 0.1);
+      oscillator.start(now);
+      oscillator.stop(now + 0.15);
+      break;
+    case 'wrong':
+      // Sad low beep
+      oscillator.frequency.setValueAtTime(300, now);
+      oscillator.frequency.setTargetAtTime(200, now+0.1, 0.15);
+      gainNode.gain.setValueAtTime(0.2, now);
+      gainNode.gain.setTargetAtTime(0, now + 0.3, 0.15);
+      oscillator.start(now);
+      oscillator.stop(now + 0.3);
+      break;
+    case 'coin':
+      // Cha-ching coin sound (two quick high beeps)
+      oscillator.frequency.setValueAtTime(800, now);
+      gainNode.gain.setValueAtTime(0.2, now);
+      gainNode.gain.setTargetAtTime(0, now + 0.1, 0.05);
+      oscillator.start(now);
+      oscillator.stop(now + 0.1);
+      
+      setTimeout(() => {
+        const osc2 = audioContext.createOscillator();
+        const gain2 = audioContext.createGain();
+        osc2.connect(gain2);
+        gain2.connect(audioContext.destination);
+        osc2.frequency.setValueAtTime(1000, now + 0.12);
+        gain2.gain.setValueAtTime(0.2, now + 0.12);
+        gain2.gain.setTargetAtTime(0, now + 0.22, 0.05);
+        osc2.start(now + 0.12);
+        osc2.stop(now + 0.22);
+      }, 120);
+      break;
+    case 'win':
+      // Victory fanfare
+      oscillator.frequency.setValueAtTime(523, now);
+      gainNode.gain.setValueAtTime(0.3, now);
+      gainNode.gain.setTargetAtTime(0, now + 0.3, 0.1);
+      oscillator.start(now);
+      oscillator.stop(now + 0.3);
+      break;
+    case 'celebrate':
+      // Celebration sound (ascending notes)
+      oscillator.frequency.setValueAtTime(440, now);
+      oscillator.frequency.setTargetAtTime(550, now + 0.1, 0.15);
+      gainNode.gain.setValueAtTime(0.25, now);
+      gainNode.gain.setTargetAtTime(0, now + 0.25, 0.1);
+      oscillator.start(now);
+      oscillator.stop(now + 0.25);
+      break;
+  }
+}
+
 function startGame(difficulty) {
   // Filter questions by difficulty
   const filteredQuestions = ALL_QUESTIONS.filter(q => q.difficulty === difficulty);
@@ -709,6 +861,7 @@ function startGame(difficulty) {
     streak:    0,        // consecutive correct answers
     total:     0,        // total answers given
     correct:   0,        // total correct answers
+    coins:     0,        // collected coins
     difficulty: difficulty,
     questions: shuffle([...filteredQuestions]).slice(0, 5),
     finalMode: false,
@@ -721,8 +874,10 @@ function startGame(difficulty) {
   renderHearts();
   renderProgress();
   renderStreak();
+  renderCoins();
   renderDifficultyBadge();
   resetHero();
+  resetPet();
   resetStars();
   resetChest();
   setOverlay(null);
@@ -768,14 +923,26 @@ function answer(idx) {
 
   if (idx === qObj.ok) {
     // ✅ Correct
+    playSound('correct');
     state.correct++;
     state.streak++;
+    
+    // Award coins based on difficulty
+    let coinsEarned = { easy: 1, normal: 2, hard: 3 }[state.difficulty] || 1;
+    if (state.streak >= 3) coinsEarned += 1;  // Bonus coin for 3+ streak!
+    
+    state.coins += coinsEarned;
+    renderCoins();
+    showCoinPopup(coinsEarned);
+    
     renderStreak();
     showFeedback('correct', '✅ Correct! Great job!');
     btns[idx].classList.add('flash-ok');
+    petHop();
     setTimeout(onCorrect, 600);
   } else {
     // ❌ Wrong — lose a heart
+    playSound('wrong');
     state.streak = 0;  // reset streak on wrong answer
     renderStreak();
     const correctAnswer = String.fromCharCode(65 + qObj.ok);  // Convert index to A, B, C
@@ -801,6 +968,7 @@ function onCorrect() {
   if (state.finalMode) {
     // Final question answered — show game selection
     moveHero(6, true, () => {
+      movePet(6, false);
       openChest();
       setTimeout(() => setOverlay('game-selection-screen'), 1200);
     });
@@ -811,6 +979,7 @@ function onCorrect() {
   renderProgress();
 
   moveHero(state.answered, true, () => {
+    movePet(state.answered, true);
     // Light up the checkpoint star
     const cp = document.getElementById('cp' + state.answered);
     if (cp) cp.classList.add('lit');
@@ -876,6 +1045,9 @@ function openChest() {
   document.getElementById('chest-wrap').classList.add('chest-open');
   document.getElementById('coins').style.display = 'block';
   document.getElementById('hero').classList.add('celebrate');
+  petCelebrate();
+  playSound('celebrate');
+  playSound('win');
   spawnConfetti();
 }
 
@@ -937,6 +1109,54 @@ function renderDifficultyBadge() {
   badge.style.color = diffColors[state.difficulty] || '#f39c12';
 }
 
+function renderCoins() {
+  document.getElementById('coin-display').textContent = `💰 ${state.coins}`;
+}
+
+function showCoinPopup(amount) {
+  const popup = document.createElement('div');
+  popup.className = 'coin-popup';
+  popup.textContent = `+${amount} 💰`;
+  popup.style.left = Math.random() * 60 + 20 + '%';
+  popup.style.top = Math.random() * 20 + 10 + '%';
+  document.getElementById('world').appendChild(popup);
+  setTimeout(() => popup.remove(), 800);
+  playSound('coin');
+}
+
+function resetPet() {
+  const pet = document.getElementById('pet');
+  pet.classList.remove('celebrate', 'hop');
+  pet.style.left = '10%';
+}
+
+function movePet(stopIdx, animate) {
+  const pet = document.getElementById('pet');
+  const heroStops = ['5%', '18%', '31%', '44%', '57%', '70%', '83%'];
+  const petOffset = stopIdx === 0 ? '10%' : 
+                    stopIdx <= 6 ? (parseInt(heroStops[stopIdx]) + 5) + '%' : '88%';
+  
+  if (animate) {
+    pet.style.transition = 'left 0.9s cubic-bezier(0.4, 0, 0.2, 1)';
+    pet.style.left = petOffset;
+  } else {
+    pet.style.transition = 'none';
+    pet.style.left = petOffset;
+  }
+}
+
+function petHop() {
+  const pet = document.getElementById('pet');
+  pet.classList.remove('hop');
+  void pet.offsetWidth;
+  pet.classList.add('hop');
+}
+
+function petCelebrate() {
+  const pet = document.getElementById('pet');
+  pet.classList.add('celebrate');
+}
+
 function showFeedback(type, message) {
   const feedbackEl = document.getElementById('feedback');
   feedbackEl.textContent = message;
@@ -957,15 +1177,18 @@ function setOverlay(id) {
   // Update stats on display
   if (id === 'win-screen' || id === 'lose-screen') {
     const accuracy = state.total > 0 ? Math.round((state.correct / state.total) * 100) : 0;
-    document.getElementById(id.replace('-screen', '') + '-correct').textContent = state.correct;
-    document.getElementById(id.replace('-screen', '') + '-total').textContent = state.total;
-    document.getElementById(id.replace('-screen', '') + '-accuracy').textContent = accuracy + '%';
+    const screenType = id.replace('-screen', '');
+    document.getElementById(screenType + '-correct').textContent = state.correct;
+    document.getElementById(screenType + '-total').textContent = state.total;
+    document.getElementById(screenType + '-accuracy').textContent = accuracy + '%';
+    document.getElementById(screenType + '-coins').textContent = state.coins;
   }
 }
 
 function resetGame() {
   document.querySelectorAll('.confetti').forEach(el => el.remove());
   document.getElementById('hero').classList.remove('celebrate', 'walk', 'shake');
+  document.getElementById('pet').classList.remove('celebrate');
   document.getElementById('panel').style.display = 'flex';
   document.getElementById('tic-tac-toe-panel').style.display = 'none';
   setOverlay('difficulty-screen');
@@ -1036,6 +1259,7 @@ let tttState = {
 function startTicTacToe() {
   resetTTT();
   resetHero();
+  resetPet();
   resetStars();
   resetChest();
   document.getElementById('panel').style.display = 'none';
