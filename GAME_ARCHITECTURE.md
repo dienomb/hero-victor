@@ -14,16 +14,21 @@ Hero Victor is a single-file, self-contained educational trivia game. Everything
 ## Game Mechanics at a Glance
 
 ### Goal
-Guide a hero character across a road by answering 5 trivia questions correctly, then answer a final "boss question" to open the treasure chest and win.
+Guide a hero character across a road by answering 5 trivia questions correctly (at your chosen difficulty), then answer a final "boss question" to open the treasure chest and win.
 
 ### Flow
-1. **Start** → Hero at position 0
+1. **Select Difficulty** → Choose Easy, Normal, or Hard
 2. **Answer Question 1-5** → Correct = hero moves forward to checkpoint, wrong = lose 1 heart
 3. **Answer Boss Question** → Correct = open chest & win, wrong = lose 1 heart
 4. **Game Over** at 0 hearts remaining (lose) OR after opening chest (win)
 
 ### Restart
-Player can restart by clicking the restart button after win/lose screens
+Player can restart by clicking the restart button after win/lose screens, which returns to difficulty selector
+
+### Difficulty Levels
+- **🌱 Easy:** 26 basic questions (14 math, 12 science) - Good for beginners
+- **⭐ Normal:** 26 moderate questions (13 math, 13 science) - Balanced challenge
+- **🔥 Hard:** 28 advanced questions (14 math, 14 science) - Expert challenge
 
 ---
 
@@ -34,6 +39,10 @@ Player can restart by clicking the restart button after win/lose screens
 state = {
   hearts: 5,           // Remaining lives (start with 5)
   answered: 0,         // Number of checkpoints completed (0-5)
+  streak: 0,           // Consecutive correct answers
+  total: 0,            // Total answers given
+  correct: 0,          // Total correct answers
+  difficulty: "normal",// Selected difficulty ("easy", "normal", "hard")
   questions: [],       // Shuffled questions for this playthrough (5 questions)
   finalMode: false,    // Flag: currently on the boss question?
   busy: false,         // Flag: is a transition/animation in progress?
@@ -45,10 +54,14 @@ state = {
 
 #### Initialization
 - **`initGame()`** - Called on page load
+  - Displays difficulty selector overlay
+  - Waits for player to choose difficulty level
+- **`startGame(difficulty)`** - Called when player selects difficulty
+  - Filters questions by selected difficulty
   - Resets state to starting values
-  - Shuffles questions array
+  - Shuffles filtered questions array
   - Loads first question
-  - Shows game UI
+  - Shows game UI with difficulty badge
 
 #### Question Loading
 - **`loadQuestion()`** - Loads next question from `state.questions` or enters final mode
@@ -95,20 +108,25 @@ state = {
   type: "Math ➕",                    // Category with emoji
   q: "What is 5 + 3?",              // Question text
   a: ["7", "8", "9"],               // Three answer options (A, B, C)
-  ok: 1                             // Index of correct answer (0, 1, or 2)
+  ok: 1,                            // Index of correct answer (0, 1, or 2)
+  difficulty: "easy"                // Difficulty level: "easy", "normal", or "hard"
 }
 ```
 
-### Question Pool
-- **Math Questions:** 12 total (arithmetic, geometry, counting)
-- **Science Questions:** 12 total (biology, physics, Earth science)
-- **Total:** 24 questions
-- **Per Game:** 5 random questions selected + 1 boss question
+### Question Pool by Difficulty
+- **Easy (26 questions):** 14 math, 12 science - Basic concepts
+- **Normal (26 questions):** 13 math, 13 science - Intermediate difficulty
+- **Hard (28 questions):** 14 math, 14 science - Advanced topics
+- **Total Pool:** 74+ questions available
+- **Per Game:** 5 random questions of selected difficulty + 1 difficulty-specific boss question
 
 ### Key Questions Arrays
-- **`questions`** - All 24 available questions (defined in code)
-- **`state.questions`** - Shuffled subset (5 questions for current playthrough)
-- **`CHEST_QUESTION`** - The special boss question asked after 5 checkpoints
+- **`ALL_QUESTIONS`** - All 74+ available questions with difficulty levels
+- **`state.questions`** - Shuffled subset (5 questions of selected difficulty)
+- **`CHEST_QUESTIONS`** - Object with boss questions for each difficulty:
+  - `CHEST_QUESTIONS.easy` - Easy boss question
+  - `CHEST_QUESTIONS.normal` - Normal boss question
+  - `CHEST_QUESTIONS.hard` - Hard boss question
 
 ---
 
@@ -204,6 +222,16 @@ state = {
 
 ## Recent Improvements (Interactive Version)
 
+### ✅ Difficulty System
+- **Three Game Modes:**
+  - 🌱 Easy: 26 questions covering basic concepts
+  - ⭐ Normal: 26 questions with moderate challenge
+  - 🔥 Hard: 28 questions featuring advanced topics
+- **Difficulty Selection Screen:** Appears on game start
+- **Separate Boss Questions:** Each difficulty has its own final challenge
+- **Visual Difficulty Badge:** Shows current mode during gameplay
+- **74+ Total Questions:** Large question pool prevents repetition
+
 ### ✅ Keyboard Support
 - **Number Keys:** Press `1`, `2`, or `3` to select answers directly
 - **Letter Keys:** Press `A`, `B`, or `C` to answer
@@ -242,15 +270,15 @@ state = {
 
 ### Potential Future Improvements
 1. **Sound Effects** - Correct/wrong answer sounds, level up effects
-2. **Difficulty Modes** - Easy/Normal/Hard with different question pools
-3. **Hint System** - Reduce hearts to get a hint
-4. **Leaderboard** - Track best scores/times
-5. **Accessibility** - Screen reader support, better keyboard nav
-6. **Mobile Touch** - Better mobile/touch interface
-7. **Question Categories** - Let players choose which categories to answer
-8. **Power-ups** - Extra hearts, answer revealed, etc.
-9. **Timed Questions** - Countdown timer for additional challenge
-10. **Custom Questions** - Allow users to add their own questions
+2. **Hint System** - Use hearts to get hints on difficult questions
+3. **Leaderboard** - Track best scores/times per difficulty
+4. **Accessibility** - Screen reader support, better keyboard navigation
+5. **Mobile Touch** - Better mobile/touch interface and button sizes
+6. **Question Categories Filter** - Let players choose specific subjects
+7. **Power-ups** - Extra hearts, answer revealed, or time bonus
+8. **Timed Questions** - Countdown timer for additional challenge
+9. **Custom Questions** - Allow users to add and share their own questions
+10. **Multiplayer Mode** - Competitive or collaborative play
 
 ---
 
