@@ -176,7 +176,24 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    #btns { display: flex; gap: 14px; }
+    #btns { display: flex; gap: 14px; margin-bottom: 10px; }
+
+    #feedback {
+      height: 30px;
+      font-size: 14px;
+      font-weight: bold;
+      color: white;
+      text-align: center;
+      animation: slideIn 0.3s ease;
+    }
+
+    #feedback.correct { color: #2ecc71; }
+    #feedback.wrong { color: #e74c3c; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     .btn {
       min-width: 160px;
@@ -397,6 +414,7 @@
       <button class="btn btn-b" onclick="answer(1)">B) ?</button>
       <button class="btn btn-c" onclick="answer(2)">C) ?</button>
     </div>
+    <div id="feedback"></div>
   </div>
 
   <!-- ===== WIN SCREEN ===== -->
@@ -507,6 +525,7 @@ function loadQuestion(qObj) {
   state.current = qObj;
   document.getElementById('q-type').textContent = qObj.type;
   document.getElementById('q-text').textContent = qObj.q;
+  document.getElementById('feedback').textContent = '';  // clear feedback
 
   const btns   = document.querySelectorAll('.btn');
   const labels = ['A', 'B', 'C'];
@@ -536,12 +555,16 @@ function answer(idx) {
     state.correct++;
     state.streak++;
     renderStreak();
+    showFeedback('correct', '✅ Correct! Great job!');
     btns[idx].classList.add('flash-ok');
     setTimeout(onCorrect, 600);
   } else {
     // ❌ Wrong — lose a heart
     state.streak = 0;  // reset streak on wrong answer
     renderStreak();
+    const correctAnswer = String.fromCharCode(65 + qObj.ok);  // Convert index to A, B, C
+    const feedback = `❌ Wrong! The correct answer is ${correctAnswer}: ${qObj.a[qObj.ok]}`;
+    showFeedback('wrong', feedback);
     btns[idx].classList.add('flash-no');
     state.hearts--;
     renderHearts();
@@ -556,6 +579,7 @@ function answer(idx) {
       }, 900);
     }
   }
+}
 }
 
 function onCorrect() {
@@ -687,6 +711,12 @@ function renderStreak() {
     streakEl.textContent = '🔥 Streak: 0';
     streakEl.style.color = '#95a5a6';
   }
+}
+
+function showFeedback(type, message) {
+  const feedbackEl = document.getElementById('feedback');
+  feedbackEl.textContent = message;
+  feedbackEl.className = type;
 }
 
 function resetStars() {
