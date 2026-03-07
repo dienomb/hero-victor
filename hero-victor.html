@@ -34,11 +34,12 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      padding: 10px;
     }
 
     #game {
-      width: 900px;
-      height: 580px;
+      width: min(900px, 96vw);
+      height: min(580px, 92vh);
       position: relative;
       border-radius: 24px;
       overflow: hidden;
@@ -440,6 +441,163 @@
       0% { opacity: 1; transform: translateY(0) scale(1); }
       100% { opacity: 0; transform: translateY(-40px) scale(0.7); }
     }
+
+    @media (max-width: 1024px) {
+      #game {
+        width: min(860px, 96vw);
+        height: min(560px, 92vh);
+      }
+
+      #q-text {
+        font-size: 20px;
+      }
+
+      .btn {
+        min-width: 140px;
+        padding: 10px 18px;
+        font-size: 15px;
+      }
+
+      .overlay h1 {
+        font-size: 42px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 6px;
+      }
+
+      #game {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+      }
+
+      #world {
+        height: 56%;
+      }
+
+      #panel {
+        height: 44%;
+        padding: 10px 12px;
+        gap: 10px;
+      }
+
+      #coin-display {
+        font-size: 16px;
+      }
+
+      #hearts {
+        top: 34px;
+      }
+
+      .heart {
+        font-size: 20px;
+      }
+
+      #progress {
+        top: 34px;
+        font-size: 13px;
+      }
+
+      #stats {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        position: absolute;
+        right: 10px;
+        top: 56px;
+      }
+
+      #q-type {
+        font-size: 12px;
+        letter-spacing: 2px;
+      }
+
+      #q-text {
+        font-size: 18px;
+        line-height: 1.25;
+      }
+
+      #btns {
+        width: 100%;
+        gap: 8px;
+      }
+
+      .btn {
+        min-width: 0;
+        width: calc(33.333% - 6px);
+        padding: 10px 8px;
+        font-size: 14px;
+      }
+
+      .overlay h1 {
+        font-size: 36px;
+        text-align: center;
+      }
+
+      .overlay p {
+        font-size: 18px;
+        text-align: center;
+      }
+
+      .difficulty-buttons {
+        width: 100%;
+        justify-content: center;
+        padding: 0 14px;
+        gap: 10px;
+      }
+
+      .difficulty-btn {
+        min-width: 0;
+        width: calc(33.333% - 7px);
+        padding: 12px 8px;
+        font-size: 16px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      #world {
+        height: 54%;
+      }
+
+      #panel {
+        height: 46%;
+        padding: 8px 10px;
+      }
+
+      #q-text {
+        font-size: 16px;
+      }
+
+      #btns {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+        font-size: 15px;
+      }
+
+      .difficulty-buttons {
+        flex-direction: column;
+      }
+
+      .difficulty-btn {
+        width: 100%;
+      }
+
+      .overlay h1 {
+        font-size: 30px;
+      }
+
+      .overlay .play-btn {
+        font-size: 18px;
+        padding: 12px 28px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -735,6 +893,13 @@ const CHEST_QUESTIONS = {
 
 // Hero left-position at each step (start → 5 checkpoints → chest)
 const STOPS = ['5%', '18%', '31%', '44%', '57%', '70%', '83%'];
+const QUESTIONS_PER_ROUND = 12;
+const CHECKPOINT_TARGETS = [3, 5, 8, 10, 12];
+const REWARD_TABLE = {
+  easy:   { base: 2, streak3: 1, streak6: 1, completion: 10 },
+  normal: { base: 4, streak3: 2, streak6: 2, completion: 15 },
+  hard:   { base: 6, streak3: 3, streak6: 3, completion: 20 }
+};
 
 let state = {};
 
@@ -834,9 +999,9 @@ function startGame(difficulty) {
     total:     0,        // total answers given
     correct:   0,        // total correct answers
     coins:     0,        // collected coins
+    stopIdx:   0,
     difficulty: difficulty,
-    questions: pickQuestions(5),
-    finalMode: false,
+    questions: pickQuestions(QUESTIONS_PER_ROUND),
     busy:      false,
     current:   null,
   };
@@ -865,14 +1030,14 @@ function initGame() {
 // ================================================================
 function loadQuestion(qObj) {
   state.current = qObj;
-  document.getElementById('q-type').textContent = qObj.type;
-  document.getElementById('q-text').textContent = qObj.q;
+  document.getElementById('q-type').textContent = stripEmojiHints(qObj.type);
+  document.getElementById('q-text').textContent = stripEmojiHints(qObj.q);
   document.getElementById('feedback').textContent = '';  // clear feedback
 
   // Shuffle answers and track new correct index
   const answerIndices = [0, 1, 2];
   const shuffledIndices = shuffle([...answerIndices]);
-  const newAnswers = shuffledIndices.map(i => qObj.a[i]);
+  const newAnswers = shuffledIndices.map(i => stripEmojiHints(qObj.a[i]));
   const newCorrectIndex = shuffledIndices.indexOf(qObj.ok);
 
   // Store current question with shuffled answers
@@ -908,16 +1073,15 @@ function answer(idx) {
     state.correct++;
     state.streak++;
     
-    // Award coins based on difficulty
-    let coinsEarned = { easy: 1, normal: 2, hard: 3 }[state.difficulty] || 1;
-    if (state.streak >= 3) coinsEarned += 1;  // Bonus coin for 3+ streak!
+    // Award coins based on difficulty, streak, and completion bonus.
+    const coinsEarned = getCoinsForCorrectAnswer();
     
     state.coins += coinsEarned;
     renderCoins();
     showCoinPopup(coinsEarned);
     
     renderStreak();
-    showFeedback('correct', '✅ Correct! Great job!');
+    showFeedback('correct', 'Correct! Great job!');
     btns[idx].classList.add('flash-ok');
     petHop();
     setTimeout(onCorrect, 600);
@@ -927,7 +1091,7 @@ function answer(idx) {
     state.streak = 0;  // reset streak on wrong answer
     renderStreak();
     const correctAnswer = String.fromCharCode(65 + qObj.ok);  // Convert index to A, B, C
-    const feedback = `❌ Wrong! The correct answer is ${correctAnswer}: ${qObj.a[qObj.ok]}`;
+    const feedback = `Wrong! The correct answer is ${correctAnswer}: ${qObj.a[qObj.ok]}`;
     showFeedback('wrong', feedback);
     btns[idx].classList.add('flash-no');
     state.hearts--;
@@ -946,8 +1110,13 @@ function answer(idx) {
 }
 
 function onCorrect() {
-  if (state.finalMode) {
-    // Final question answered — WIN!
+  state.answered++;
+  renderProgress();
+  updateCheckpointStars();
+
+  if (state.answered >= QUESTIONS_PER_ROUND) {
+    state.stopIdx = 6;
+    // Round complete — WIN!
     moveHero(6, true, () => {
       movePet(6, false);
       openChest();
@@ -956,26 +1125,19 @@ function onCorrect() {
     return;
   }
 
-  state.answered++;
-  renderProgress();
-
-  moveHero(state.answered, true, () => {
-    movePet(state.answered, true);
-    // Light up the checkpoint star
-    const cp = document.getElementById('cp' + state.answered);
-    if (cp) cp.classList.add('lit');
-
-    if (state.answered >= 5) {
-      // All 5 done — show the chest (final boss) question
-      state.finalMode = true;
-      state.busy = false;
-      const chestQuestion = CHEST_QUESTIONS[state.difficulty];
-      loadQuestion(chestQuestion);
-    } else {
+  const nextStop = getStopForAnswered(state.answered);
+  if (nextStop > state.stopIdx) {
+    state.stopIdx = nextStop;
+    moveHero(state.stopIdx, true, () => {
+      movePet(state.stopIdx, true);
       state.busy = false;
       loadQuestion(state.questions[state.answered]);
-    }
-  });
+    });
+    return;
+  }
+
+  state.busy = false;
+  loadQuestion(state.questions[state.answered]);
 }
 
 // ================================================================
@@ -1068,7 +1230,38 @@ function renderHearts() {
 }
 
 function renderProgress() {
-  document.getElementById('progress').textContent = `⭐ ${state.answered} / 5`;
+  document.getElementById('progress').textContent = `⭐ ${state.answered} / ${QUESTIONS_PER_ROUND}`;
+}
+
+function updateCheckpointStars() {
+  for (let i = 1; i <= 5; i++) {
+    const target = CHECKPOINT_TARGETS[i - 1];
+    document.getElementById('cp' + i).classList.toggle('lit', state.answered >= target);
+  }
+}
+
+function getStopForAnswered(answered) {
+  if (answered <= 0) return 0;
+  return Math.min(5, Math.floor((answered / QUESTIONS_PER_ROUND) * 5));
+}
+
+function getCoinsForCorrectAnswer() {
+  const rewards = REWARD_TABLE[state.difficulty] || REWARD_TABLE.normal;
+  let coins = rewards.base;
+
+  if (state.streak >= 3) coins += rewards.streak3;
+  if (state.streak >= 6) coins += rewards.streak6;
+  if (state.answered + 1 === QUESTIONS_PER_ROUND) coins += rewards.completion;
+
+  return coins;
+}
+
+function stripEmojiHints(text) {
+  return String(text)
+    .replace(/\p{Extended_Pictographic}/gu, '')
+    .replace(/\uFE0F/gu, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
 }
 
 function renderStreak() {
