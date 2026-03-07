@@ -893,6 +893,8 @@ const CHEST_QUESTIONS = {
 
 // Hero left-position at each step (start → 5 checkpoints → chest)
 const STOPS = ['5%', '18%', '31%', '44%', '57%', '70%', '83%'];
+const HERO_START_PERCENT = 5;
+const HERO_END_PERCENT = 83;
 const QUESTIONS_PER_ROUND = 12;
 const CHECKPOINT_TARGETS = [3, 5, 8, 10, 12];
 const REWARD_TABLE = {
@@ -999,7 +1001,6 @@ function startGame(difficulty) {
     total:     0,        // total answers given
     correct:   0,        // total correct answers
     coins:     0,        // collected coins
-    stopIdx:   0,
     difficulty: difficulty,
     questions: pickQuestions(QUESTIONS_PER_ROUND),
     busy:      false,
@@ -1113,31 +1114,24 @@ function onCorrect() {
   state.answered++;
   renderProgress();
   updateCheckpointStars();
+  const nextHeroPercent = getHeroPercentForAnswered(state.answered);
+  const nextPetPercent = getPetPercentForHero(nextHeroPercent);
 
   if (state.answered >= QUESTIONS_PER_ROUND) {
-    state.stopIdx = 6;
     // Round complete — WIN!
-    moveHero(6, true, () => {
-      movePet(6, false);
+    moveHeroToPercent(nextHeroPercent, true, () => {
+      movePetToPercent(nextPetPercent, true);
       openChest();
       setTimeout(() => setOverlay('win-screen'), 1200);
     });
     return;
   }
 
-  const nextStop = getStopForAnswered(state.answered);
-  if (nextStop > state.stopIdx) {
-    state.stopIdx = nextStop;
-    moveHero(state.stopIdx, true, () => {
-      movePet(state.stopIdx, true);
-      state.busy = false;
-      loadQuestion(state.questions[state.answered]);
-    });
-    return;
-  }
-
-  state.busy = false;
-  loadQuestion(state.questions[state.answered]);
+  moveHeroToPercent(nextHeroPercent, true, () => {
+    movePetToPercent(nextPetPercent, true);
+    state.busy = false;
+    loadQuestion(state.questions[state.answered]);
+  });
 }
 
 // ================================================================
@@ -1167,6 +1161,31 @@ function moveHero(stopIdx, animate, cb) {
   }, 950);
 }
 
+function moveHeroToPercent(percent, animate, cb) {
+  const hero = document.getElementById('hero');
+  hero.classList.remove('walk', 'shake', 'celebrate');
+
+  const leftValue = `${percent}%`;
+
+  if (!animate) {
+    hero.style.transition = 'none';
+    hero.style.left = leftValue;
+    void hero.offsetWidth;
+    hero.style.transition = '';
+    if (cb) cb();
+    return;
+  }
+
+  void hero.offsetWidth;
+  hero.classList.add('walk');
+  hero.style.left = leftValue;
+
+  setTimeout(() => {
+    hero.classList.remove('walk');
+    if (cb) cb();
+  }, 950);
+}
+
 function shakeHero() {
   const hero = document.getElementById('hero');
   hero.classList.remove('shake');
@@ -1178,7 +1197,7 @@ function shakeHero() {
 function resetHero() {
   const hero = document.getElementById('hero');
   hero.classList.remove('walk', 'shake', 'celebrate');
-  moveHero(0, false);
+  moveHeroToPercent(getHeroPercentForAnswered(0), false);
 }
 
 // ================================================================
@@ -1245,6 +1264,16 @@ function getStopForAnswered(answered) {
   return Math.min(5, Math.floor((answered / QUESTIONS_PER_ROUND) * 5));
 }
 
+function getHeroPercentForAnswered(answered) {
+  const clamped = Math.max(0, Math.min(QUESTIONS_PER_ROUND, answered));
+  const step = (HERO_END_PERCENT - HERO_START_PERCENT) / QUESTIONS_PER_ROUND;
+  return HERO_START_PERCENT + step * clamped;
+}
+
+function getPetPercentForHero(heroPercent) {
+  return Math.min(88, heroPercent + 5);
+}
+
 function getCoinsForCorrectAnswer() {
   const rewards = REWARD_TABLE[state.difficulty] || REWARD_TABLE.normal;
   let coins = rewards.base;
@@ -1301,7 +1330,7 @@ function showCoinPopup(amount) {
 function resetPet() {
   const pet = document.getElementById('pet');
   pet.classList.remove('celebrate', 'hop');
-  pet.style.left = '10%';
+  movePetToPercent(getPetPercentForHero(getHeroPercentForAnswered(0)), false);
 }
 
 function movePet(stopIdx, animate) {
@@ -1316,6 +1345,19 @@ function movePet(stopIdx, animate) {
   } else {
     pet.style.transition = 'none';
     pet.style.left = petOffset;
+  }
+}
+
+function movePetToPercent(percent, animate) {
+  const pet = document.getElementById('pet');
+  const leftValue = `${percent}%`;
+
+  if (animate) {
+    pet.style.transition = 'left 0.9s cubic-bezier(0.4, 0, 0.2, 1)';
+    pet.style.left = leftValue;
+  } else {
+    pet.style.transition = 'none';
+    pet.style.left = leftValue;
   }
 }
 
