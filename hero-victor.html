@@ -4,12 +4,32 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hero's Quest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sky-top:    #0d0433;
+      --sky-mid:    #2d1b69;
+      --sky-bottom: #6b3fa0;
+      --ground-top: #1a7a35;
+      --ground-bot: #0d5c24;
+      --panel-top:  #0d0433;
+      --panel-bot:  #1a0850;
+      --gold:       #FFD700;
+      --gold-warm:  #FFA500;
+      --white-soft: #F8F0FF;
+      --btn-a-from: #00b09b; --btn-a-to: #0ea882; --btn-a-glow: rgba(0,176,155,0.45);
+      --btn-b-from: #4776e6; --btn-b-to: #8e54e9; --btn-b-glow: rgba(71,118,230,0.45);
+      --btn-c-from: #f7971e; --btn-c-to: #e65c00; --btn-c-glow: rgba(247,151,30,0.45);
+    }
+  </style>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;
-      background: #1a1a2e;
+      font-family: 'Fredoka One', 'Nunito', cursive;
+      background: radial-gradient(ellipse at center, #1a0a3d 0%, #07021a 100%);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -20,9 +40,9 @@
       width: 900px;
       height: 580px;
       position: relative;
-      border-radius: 20px;
+      border-radius: 24px;
       overflow: hidden;
-      box-shadow: 0 0 50px rgba(0,0,0,0.6);
+      box-shadow: 0 0 80px rgba(138,43,226,0.45), 0 0 20px rgba(0,0,0,0.9);
     }
 
     /* ===== WORLD ===== */
@@ -30,16 +50,42 @@
       width: 100%;
       height: 60%;
       position: relative;
-      background: linear-gradient(180deg, #5bc8f5 0%, #a8e4f7 100%);
+      background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 55%, var(--sky-bottom) 100%);
       overflow: hidden;
     }
 
-    .cloud { position: absolute; background: white; border-radius: 40px; opacity: 0.9; }
+    #sky-stars {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(1.5px 1.5px at 8%  12%, white 0%, transparent 100%),
+        radial-gradient(1px   1px   at 22% 8%,  white 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 35% 20%, white 0%, transparent 100%),
+        radial-gradient(1px   1px   at 48% 6%,  white 0%, transparent 100%),
+        radial-gradient(2px   2px   at 58% 15%, white 0%, transparent 100%),
+        radial-gradient(1px   1px   at 70% 9%,  white 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 82% 18%, white 0%, transparent 100%),
+        radial-gradient(1px   1px   at 93% 7%,  white 0%, transparent 100%),
+        radial-gradient(1px   1px   at 15% 30%, white 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 75% 28%, white 0%, transparent 100%),
+        radial-gradient(1px   1px   at 42% 35%, white 0%, transparent 100%),
+        radial-gradient(2px   2px   at 88% 25%, white 0%, transparent 100%);
+      background-size: 100% 100%;
+      animation: twinkle 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes twinkle {
+      from { opacity: 0.45; }
+      to   { opacity: 1; }
+    }
+
+    .cloud { position: absolute; background: rgba(220,195,255,0.88); border-radius: 50px; opacity: 0.9; }
 
     #grass {
       position: absolute;
       bottom: 0; width: 100%; height: 65px;
-      background: linear-gradient(180deg, #5cb85c 0%, #3d8b3d 100%);
+      background: linear-gradient(180deg, var(--ground-top) 0%, var(--ground-bot) 100%);
     }
 
     #road {
@@ -69,7 +115,12 @@
 
     .star-cp.lit {
       filter: none;
-      transform: scale(1.25);
+      animation: starGlow 1.2s ease-in-out infinite alternate;
+    }
+
+    @keyframes starGlow {
+      from { filter: drop-shadow(0 0 4px #FFD700); transform: scale(1.2); }
+      to   { filter: drop-shadow(0 0 10px #FFD700) drop-shadow(0 0 20px #FFA500); transform: scale(1.35); }
     }
 
     /* ===== HEARTS & PROGRESS ===== */
@@ -143,31 +194,37 @@
     #panel {
       width: 100%;
       height: 40%;
-      background: linear-gradient(180deg, #2c3e50, #34495e);
+      background:
+        radial-gradient(rgba(255,215,0,0.06) 1px, transparent 1px),
+        linear-gradient(180deg, var(--panel-top), var(--panel-bot));
+      background-size: 24px 24px, 100% 100%;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       gap: 12px;
       padding: 10px 20px;
-      border-top: 2px solid #1a252f;
+      border-top: 3px solid rgba(138,43,226,0.6);
     }
 
     #q-type {
-      color: #f39c12;
-      font-size: 13px;
+      color: var(--gold);
+      font-size: 14px;
       text-transform: uppercase;
-      letter-spacing: 2px;
+      letter-spacing: 3px;
       font-weight: bold;
+      text-shadow: 0 0 10px rgba(255,215,0,0.5);
       animation: fadeIn 0.5s ease;
     }
 
     #q-text {
-      color: white;
-      font-size: 21px;
+      color: var(--white-soft);
+      font-size: 22px;
+      font-family: 'Fredoka One', cursive;
       text-align: center;
       max-width: 700px;
       line-height: 1.35;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.5);
       animation: fadeIn 0.5s ease;
     }
 
@@ -197,27 +254,27 @@
 
     .btn {
       min-width: 160px;
-      padding: 11px 20px;
-      font-size: 17px;
-      font-family: inherit;
-      font-weight: bold;
-      border: 3px solid transparent;
-      border-radius: 12px;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-family: 'Nunito', cursive;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      border: none;
+      border-radius: 50px;
       cursor: pointer;
       color: white;
       transition: all 0.15s ease;
       position: relative;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
 
     .btn:hover:not(:disabled) {
-      transform: translateY(-3px);
-      box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+      transform: translateY(-4px);
+      filter: brightness(1.1);
     }
 
     .btn:active:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transform: translateY(1px);
+      filter: brightness(0.95);
     }
 
     .btn:disabled {
@@ -227,13 +284,12 @@
 
     .btn:focus {
       outline: none;
-      border-color: white;
-      box-shadow: 0 6px 12px rgba(0,0,0,0.3), inset 0 0 0 2px rgba(255,255,255,0.3);
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.4);
     }
 
-    .btn-a { background: #27ae60; }
-    .btn-b { background: #2980b9; }
-    .btn-c { background: #e67e22; }
+    .btn-a { background: linear-gradient(135deg, var(--btn-a-from), var(--btn-a-to)); box-shadow: 0 5px 15px var(--btn-a-glow); }
+    .btn-b { background: linear-gradient(135deg, var(--btn-b-from), var(--btn-b-to)); box-shadow: 0 5px 15px var(--btn-b-glow); }
+    .btn-c { background: linear-gradient(135deg, var(--btn-c-from), var(--btn-c-to)); box-shadow: 0 5px 15px var(--btn-c-glow); }
 
     .btn.flash-ok { animation: flashOk 0.6s ease; }
     .btn.flash-no { animation: flashNo 0.6s ease; }
@@ -261,9 +317,9 @@
       z-index: 50;
     }
 
-    #difficulty-screen { background: rgba(41,128,185,0.95); }
-    #win-screen  { background: rgba(39,174,96,0.93); }
-    #lose-screen { background: rgba(192,57,43,0.93); }
+    #difficulty-screen { background: rgba(13,4,51,0.97); }
+    #win-screen        { background: rgba(10,60,30,0.96); }
+    #lose-screen       { background: rgba(90,10,30,0.96); }
 
     .difficulty-buttons {
       display: flex;
@@ -274,11 +330,11 @@
     .difficulty-btn {
       padding: 16px 32px;
       font-size: 18px;
-      font-family: inherit;
+      font-family: 'Nunito', cursive;
+      font-weight: 800;
       border: none;
-      border-radius: 12px;
+      border-radius: 50px;
       cursor: pointer;
-      font-weight: bold;
       color: white;
       transition: all 0.2s;
       min-width: 120px;
@@ -286,11 +342,12 @@
 
     .difficulty-btn:hover {
       transform: translateY(-4px);
-      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+      filter: brightness(1.12);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.4);
     }
 
     .difficulty-btn:active {
-      transform: translateY(-2px);
+      transform: translateY(-1px);
     }
 
     .btn-easy {
@@ -305,21 +362,23 @@
       background: linear-gradient(135deg, #e74c3c, #c0392b);
     }
 
-    .overlay h1  { font-size: 46px; color: white; text-shadow: 2px 2px 8px #0004; }
-    .overlay p   { font-size: 20px; color: white; }
+    .overlay h1  { font-size: 52px; font-family: 'Fredoka One', cursive; color: white; text-shadow: 0 0 20px rgba(255,215,0,0.4), 2px 2px 0 rgba(0,0,0,0.3); }
+    .overlay p   { font-size: 20px; color: var(--white-soft); }
 
     .overlay .play-btn {
-      padding: 14px 40px;
+      padding: 14px 44px;
       font-size: 20px;
-      font-family: inherit;
-      background: white;
+      font-family: 'Nunito', cursive;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--gold), var(--gold-warm));
+      color: #1a0a3d;
       border: none;
-      border-radius: 14px;
+      border-radius: 50px;
       cursor: pointer;
-      font-weight: bold;
-      transition: transform 0.1s;
+      box-shadow: 0 6px 20px rgba(255,165,0,0.5);
+      transition: transform 0.15s, filter 0.15s;
     }
-    .overlay .play-btn:hover { transform: scale(1.07); }
+    .overlay .play-btn:hover { transform: scale(1.07); filter: brightness(1.08); }
 
     /* ===== CONFETTI ===== */
     .confetti {
@@ -362,8 +421,8 @@
     #coin-display {
       position: absolute;
       top: 8px; left: 10px;
-      color: #FFD700; font-size: 18px; font-weight: bold;
-      text-shadow: 1px 1px 3px #0005;
+      color: var(--gold); font-size: 19px; font-weight: bold;
+      text-shadow: 0 0 12px rgba(255,215,0,0.7), 1px 1px 3px rgba(0,0,0,0.5);
       z-index: 10;
     }
 
@@ -389,6 +448,9 @@
 
   <!-- ===== WORLD ===== -->
   <div id="world">
+
+    <!-- Twinkling stars -->
+    <div id="sky-stars"></div>
 
     <!-- Clouds -->
     <div class="cloud" style="width:90px;height:34px;top:50px;left:8%"></div>
@@ -538,8 +600,8 @@
 
   <!-- ===== DIFFICULTY SELECTOR ===== -->
   <div class="overlay" id="difficulty-screen">
-    <h1>Choose Difficulty 🎮</h1>
-    <p>Select your challenge level!</p>
+    <h1>Choose Difficulty 📚</h1>
+    <p>How well do you know your words?</p>
     <div class="difficulty-buttons">
       <button class="difficulty-btn btn-easy" onclick="startGame('easy')">🌱 Easy</button>
       <button class="difficulty-btn btn-normal" onclick="startGame('normal')">⭐ Normal</button>
@@ -575,108 +637,69 @@
 
 <script>
 // ================================================================
-// ✏️  QUESTIONS WITH DIFFICULTY LEVELS
+// ✏️  QUESTIONS WITH DIFFICULTY LEVELS — Pre A1 Starters Vocabulary
 //     difficulty: "easy" | "normal" | "hard"
 //     ok: is the index of the correct answer (0 = A, 1 = B, 2 = C)
 // ================================================================
 const ALL_QUESTIONS = [
-  // --- EASY MATH ---
-  { type: "Math ➕", q: "What is 1 + 1?",                           a: ["1",   "2",              "3"],    ok: 1, difficulty: "easy" },
-  { type: "Math ➕", q: "What is 2 + 2?",                           a: ["3",   "4",              "5"],    ok: 1, difficulty: "easy" },
-  { type: "Math ➕", q: "What is 3 + 4?",                           a: ["6",   "7",              "8"],    ok: 1, difficulty: "easy" },
-  { type: "Math ➕", q: "What is 10 − 3?",                          a: ["6",   "7",              "8"],    ok: 1, difficulty: "easy" },
-  { type: "Math ➕", q: "What comes after 15?",                     a: ["14",  "16",             "17"],   ok: 1, difficulty: "easy" },
-  { type: "Math ➕", q: "What is 2 + 2 + 2?",                       a: ["4",   "5",              "6"],    ok: 2, difficulty: "easy" },
-  { type: "Math ➕", q: "How much is 5 + 5?",                       a: ["9",   "10",             "11"],   ok: 1, difficulty: "easy" },
-  { type: "Math ➕", q: "What is 8 − 5?",                           a: ["2",   "3",              "4"],    ok: 1, difficulty: "easy" },
-  { type: "Math ➕", q: "How many sides does a triangle have?",     a: ["2",   "4",              "3"],    ok: 2, difficulty: "easy" },
-  { type: "Math ➕", q: "What is half of 10?",                      a: ["4",   "5",              "6"],    ok: 1, difficulty: "easy" },
-  { type: "Math ➕", q: "Which number is bigger: 7 or 9?",          a: ["7",   "They are equal", "9"],    ok: 2, difficulty: "easy" },
-  { type: "Math ➕", q: "How many days are in a week?",             a: ["5",   "6",              "7"],    ok: 2, difficulty: "easy" },
-  { type: "Math ➕", q: "What is 4 + 3?",                           a: ["8",   "6",              "7"],    ok: 2, difficulty: "easy" },
-  { type: "Math ➕", q: "How many wheels does a bicycle have?",     a: ["1",   "3",              "2"],    ok: 2, difficulty: "easy" },
+  // --- EASY: Animals, Colours, Food, Toys, Transport, Family ---
+  { type: "Animals 🐾",      q: "Which of these is an animal? 🐘",                    a: ["Elephant",    "Apple",       "Chair"],      ok: 0, difficulty: "easy" },
+  { type: "Animals 🐾",      q: "What animal says 'moo'? 🐄",                         a: ["Cow",         "Dog",         "Cat"],        ok: 0, difficulty: "easy" },
+  { type: "Animals 🐾",      q: "Which animal has a very long neck? 🦒",               a: ["Giraffe",     "Elephant",    "Snake"],      ok: 0, difficulty: "easy" },
+  { type: "Animals 🐾",      q: "Which animal can fly? 🐦",                            a: ["Bird",        "Fish",        "Frog"],       ok: 0, difficulty: "easy" },
+  { type: "Animals 🐾",      q: "Where can you see lots of animals? 🦁",               a: ["Zoo",         "School",      "Kitchen"],    ok: 0, difficulty: "easy" },
+  { type: "Animals 🐾",      q: "Which animal makes honey? 🍯",                        a: ["Bee",         "Dog",         "Cat"],        ok: 0, difficulty: "easy" },
+  { type: "Colours 🎨",      q: "What colour is a banana? 🍌",                         a: ["Yellow",      "Blue",        "Red"],        ok: 0, difficulty: "easy" },
+  { type: "Colours 🎨",      q: "What colour is grass? 🌿",                            a: ["Green",       "Orange",      "Purple"],     ok: 0, difficulty: "easy" },
+  { type: "Colours 🎨",      q: "What colour is the sky on a sunny day? ☀️",           a: ["Blue",        "Red",         "Yellow"],     ok: 0, difficulty: "easy" },
+  { type: "Colours 🎨",      q: "What colour is a tomato? 🍅",                         a: ["Red",         "Blue",        "Green"],      ok: 0, difficulty: "easy" },
+  { type: "Food & Drink 🍎", q: "Which of these is a fruit? 🍎",                       a: ["Apple",       "Chair",       "Dog"],        ok: 0, difficulty: "easy" },
+  { type: "Food & Drink 🍎", q: "What do cows give us to drink? 🐄",                  a: ["Milk",        "Juice",       "Sand"],       ok: 0, difficulty: "easy" },
+  { type: "Food & Drink 🍎", q: "What meal do you eat in the morning? 🌅",             a: ["Breakfast",   "Dinner",      "Lunch"],      ok: 0, difficulty: "easy" },
+  { type: "Toys 🧸",         q: "Which of these is a toy? 🤖",                         a: ["Robot",       "Apple",       "Milk"],       ok: 0, difficulty: "easy" },
+  { type: "Toys 🧸",         q: "What do you call a soft toy shaped like a bear? 🧸",  a: ["Teddy bear",  "Motorbike",   "Book"],       ok: 0, difficulty: "easy" },
+  { type: "Transport 🚗",    q: "Which of these can you ride on the road? 🚌",         a: ["Bus",         "Fish",        "Hat"],        ok: 0, difficulty: "easy" },
+  { type: "Transport 🚗",    q: "What do you call a vehicle that flies? ✈️",           a: ["Plane",       "Boat",        "Car"],        ok: 0, difficulty: "easy" },
+  { type: "Family 👨‍👩‍👦",      q: "What do you call your dad's dad? 👴",                 a: ["Grandpa",     "Uncle",       "Brother"],    ok: 0, difficulty: "easy" },
 
-  // --- EASY SCIENCE ---
-  { type: "Science 🔬", q: "What do plants need to grow?",         a: ["Milk",      "Sunlight",    "Sand"],       ok: 1, difficulty: "easy" },
-  { type: "Science 🔬", q: "Which animal lays eggs?",              a: ["Dog",       "Bird",        "Cat"],        ok: 1, difficulty: "easy" },
-  { type: "Science 🔬", q: "What shape is the Moon?",              a: ["Square",    "Triangle",    "Round"],      ok: 2, difficulty: "easy" },
-  { type: "Science 🔬", q: "How many legs does a spider have?",    a: ["6",         "4",           "8"],          ok: 2, difficulty: "easy" },
-  { type: "Science 🔬", q: "What do fish use to breathe?",         a: ["Lungs",     "Gills",       "Nose"],       ok: 1, difficulty: "easy" },
-  { type: "Science 🔬", q: "What color is the sky on a sunny day?",a: ["Green",     "Red",         "Blue"],       ok: 2, difficulty: "easy" },
-  { type: "Science 🔬", q: "What do caterpillars turn into?",      a: ["Frogs",     "Butterflies", "Birds"],      ok: 1, difficulty: "easy" },
-  { type: "Science 🔬", q: "What do we call frozen water?",        a: ["Steam",     "Ice",         "Mud"],        ok: 1, difficulty: "easy" },
-  { type: "Science 🔬", q: "How many seasons are in a year?",      a: ["3",         "5",           "4"],          ok: 2, difficulty: "easy" },
-  { type: "Science 🔬", q: "Which animal is the biggest?",         a: ["Elephant",  "Mouse",       "Cat"],        ok: 0, difficulty: "easy" },
-  { type: "Science 🔬", q: "What do cows give us?",                a: ["Juice",     "Milk",        "Water"],      ok: 1, difficulty: "easy" },
-  { type: "Science 🔬", q: "Where do fish live?",                  a: ["In trees",  "In the sky",  "In water"],   ok: 2, difficulty: "easy" },
+  // --- NORMAL: Body, Clothes, School, Sports, more Animals & Food ---
+  { type: "Animals 🐾",      q: "Which animal has black and white stripes? 🦓",        a: ["Zebra",       "Tiger",       "Giraffe"],    ok: 0, difficulty: "normal" },
+  { type: "Animals 🐾",      q: "Which animal lives in water and has fins? 🐟",        a: ["Fish",        "Dog",         "Cat"],        ok: 0, difficulty: "normal" },
+  { type: "Animals 🐾",      q: "What animal hops and lives near ponds? 🐸",           a: ["Frog",        "Bird",        "Spider"],     ok: 0, difficulty: "normal" },
+  { type: "Body 🧍",         q: "What body part do you use to see? 👁️",                a: ["Eyes",        "Nose",        "Ear"],        ok: 0, difficulty: "normal" },
+  { type: "Body 🧍",         q: "What is on top of your head? 🧑",                     a: ["Hair",        "Leg",         "Arm"],        ok: 0, difficulty: "normal" },
+  { type: "Body 🧍",         q: "What body part do you use to walk? 🦵",               a: ["Legs",        "Arms",        "Ears"],       ok: 0, difficulty: "normal" },
+  { type: "Clothes 👕",      q: "Which of these is an item of clothing? 👕",           a: ["T-shirt",     "Apple",       "Fish"],       ok: 0, difficulty: "normal" },
+  { type: "Clothes 👕",      q: "What do you wear on your feet? 👟",                   a: ["Shoes",       "Hat",         "Gloves"],     ok: 0, difficulty: "normal" },
+  { type: "Family 👨‍👩‍👦",      q: "What do you call your mother's mother? 👵",           a: ["Grandmother", "Aunt",        "Sister"],     ok: 0, difficulty: "normal" },
+  { type: "Food 🍽️",         q: "What is the meal you eat at night? 🌙",               a: ["Dinner",      "Breakfast",   "Snack"],      ok: 0, difficulty: "normal" },
+  { type: "Food 🍽️",         q: "Which of these is a vegetable? 🥕",                   a: ["Carrot",      "Banana",      "Milk"],       ok: 0, difficulty: "normal" },
+  { type: "School 📚",       q: "What do you use to draw lines and colours in class? ✏️", a: ["Crayons",  "Plate",       "Shoe"],       ok: 0, difficulty: "normal" },
+  { type: "School 📚",       q: "What is the person who teaches you called? 👩‍🏫",       a: ["Teacher",    "Driver",      "Doctor"],     ok: 0, difficulty: "normal" },
+  { type: "School 📚",       q: "What do you use to erase a pencil mark? 🔲",          a: ["Eraser",      "Ruler",       "Pen"],        ok: 0, difficulty: "normal" },
+  { type: "Sports 🏅",       q: "Which of these is a sport? ⚽",                        a: ["Football",    "Milk",        "Chair"],      ok: 0, difficulty: "normal" },
+  { type: "Sports 🏅",       q: "What sport do you play in a swimming pool? 🏊",       a: ["Swimming",    "Hockey",      "Tennis"],     ok: 0, difficulty: "normal" },
+  { type: "Transport 🚗",    q: "What do you call a very big boat? 🚢",                a: ["Ship",        "Bike",        "Train"],      ok: 0, difficulty: "normal" },
+  { type: "Colours 🎨",      q: "What colour is an orange? 🍊",                        a: ["Orange",      "Purple",      "Pink"],       ok: 0, difficulty: "normal" },
 
-  // --- NORMAL MATH ---
-  { type: "Math ➕", q: "What is 12 + 8?",                          a: ["18",  "20",             "22"],   ok: 1, difficulty: "normal" },
-  { type: "Math ➕", q: "What is 25 − 9?",                          a: ["15",  "16",             "17"],   ok: 0, difficulty: "normal" },
-  { type: "Math ➕", q: "How many sides does a square have?",       a: ["3",   "4",              "5"],    ok: 1, difficulty: "normal" },
-  { type: "Math ➕", q: "What is 6 × 5?",                           a: ["28",  "30",             "32"],   ok: 1, difficulty: "normal" },
-  { type: "Math ➕", q: "What is 30 ÷ 6?",                          a: ["4",   "5",              "6"],    ok: 1, difficulty: "normal" },
-  { type: "Math ➕", q: "How many minutes in an hour?",             a: ["30",  "60",             "90"],   ok: 1, difficulty: "normal" },
-  { type: "Math ➕", q: "What is the double of 15?",                a: ["25",  "30",             "35"],   ok: 1, difficulty: "normal" },
-  { type: "Math ➕", q: "How many hours in a day?",                 a: ["12",  "24",             "48"],   ok: 1, difficulty: "normal" },
-  { type: "Math ➕", q: "What is 9 + 7 − 3?",                       a: ["11",  "13",             "15"],   ok: 1, difficulty: "normal" },
-  { type: "Math ➕", q: "How many months are in a year?",           a: ["10",  "12",             "14"],   ok: 1, difficulty: "normal" },
-  { type: "Math ➕", q: "What is 100 ÷ 10?",                        a: ["5",   "10",             "15"],   ok: 1, difficulty: "normal" },
-  { type: "Math ➕", q: "What comes between 99 and 101?",           a: ["98",  "100",            "102"],  ok: 1, difficulty: "normal" },
-  { type: "Math ➕", q: "What is 7 × 4?",                           a: ["24",  "28",             "32"],   ok: 1, difficulty: "normal" },
-
-  // --- NORMAL SCIENCE ---
-  { type: "Science 🔬", q: "How many bones does a human have?",    a: ["186", "206",            "226"],  ok: 1, difficulty: "normal" },
-  { type: "Science 🔬", q: "What gas do plants produce?",          a: ["CO₂", "Oxygen",         "Nitrogen"],ok: 1, difficulty: "normal" },
-  { type: "Science 🔬", q: "What is the fastest land animal?",     a: ["Lion",    "Cheetah",      "Gazelle"],ok: 1, difficulty: "normal" },
-  { type: "Science 🔬", q: "How many eyes does a bee have?",       a: ["2",   "3",              "5"],    ok: 2, difficulty: "normal" },
-  { type: "Science 🔬", q: "What planet are we on?",               a: ["Mars",    "Earth",        "Venus"],ok: 1, difficulty: "normal" },
-  { type: "Science 🔬", q: "How many legs do insects have?",       a: ["4",   "6",              "8"],    ok: 1, difficulty: "normal" },
-  { type: "Science 🔬", q: "What do bees make?",                   a: ["Milk", "Honey",         "Wax"],  ok: 1, difficulty: "normal" },
-  { type: "Science 🔬", q: "Which is a source of Vitamin C?",      a: ["Carrot", "Orange",       "Broccoli"],ok: 1, difficulty: "normal" },
-  { type: "Science 🔬", q: "What is the tallest tree?",            a: ["Oak", "Redwood",        "Pine"],  ok: 1, difficulty: "normal" },
-  { type: "Science 🔬", q: "How many chambers does a heart have?", a: ["2",   "4",              "6"],    ok: 1, difficulty: "normal" },
-  { type: "Science 🔬", q: "What do we call a baby swan?",         a: ["Chick",    "Duckling",    "Cygnet"],ok: 2, difficulty: "normal" },
-  { type: "Science 🔬", q: "Which animal has the longest neck?",   a: ["Ostrich",  "Llama",       "Giraffe"],ok: 2, difficulty: "normal" },
-  { type: "Science 🔬", q: "How many petals on a daisy?",          a: ["8",   "12",             "Varies"],ok: 2, difficulty: "normal" },
-
-  // --- HARD MATH ---
-  { type: "Math ➕", q: "What is 45 + 37?",                         a: ["80",  "82",             "84"],   ok: 1, difficulty: "hard" },
-  { type: "Math ➕", q: "What is 100 − 47?",                        a: ["51",  "53",             "55"],   ok: 1, difficulty: "hard" },
-  { type: "Math ➕", q: "What is 13 × 6?",                          a: ["72",  "78",             "84"],   ok: 1, difficulty: "hard" },
-  { type: "Math ➕", q: "What is 144 ÷ 12?",                        a: ["10",  "12",             "14"],   ok: 1, difficulty: "hard" },
-  { type: "Math ➕", q: "What is 25% of 80?",                       a: ["15",  "20",             "25"],   ok: 1, difficulty: "hard" },
-  { type: "Math ➕", q: "What is 15 + 23 − 8?",                     a: ["28",  "30",             "32"],   ok: 1, difficulty: "hard" },
-  { type: "Math ➕", q: "What is the square of 8?",                 a: ["56",  "64",             "72"],   ok: 1, difficulty: "hard" },
-  { type: "Math ➕", q: "How many seconds in 5 minutes?",           a: ["250", "300",            "350"],  ok: 1, difficulty: "hard" },
-  { type: "Math ➕", q: "What is 99 ÷ 11?",                         a: ["7",   "9",              "11"],   ok: 1, difficulty: "hard" },
-  { type: "Math ➕", q: "What is 50% of 240?",                      a: ["80",  "120",            "160"],  ok: 1, difficulty: "hard" },
-  { type: "Math ➕", q: "What is 7 × 8 + 4?",                       a: ["56",  "60",             "64"],   ok: 1, difficulty: "hard" },
-  { type: "Math ➕", q: "How many cm in 2.5 meters?",               a: ["25",  "250",            "2500"], ok: 1, difficulty: "hard" },
-  { type: "Math ➕", q: "What is the cube of 3?",                   a: ["9",   "27",             "81"],   ok: 1, difficulty: "hard" },
-  { type: "Math ➕", q: "What is 36 ÷ 4 + 5?",                      a: ["14",  "15",             "16"],   ok: 0, difficulty: "hard" },
-
-  // --- HARD SCIENCE ---
-  { type: "Science 🔬", q: "What is the chemical formula for water?",a: ["H₂O",  "H₂O₂",          "CO₂"],  ok: 0, difficulty: "hard" },
-  { type: "Science 🔬", q: "How fast does light travel?",          a: ["300,000 km/s", "150,000 km/s", "50,000 km/s"],ok: 0, difficulty: "hard" },
-  { type: "Science 🔬", q: "What do we call a male bee?",          a: ["Worker", "Drone",        "Queen"], ok: 1, difficulty: "hard" },
-  { type: "Science 🔬", q: "How many times can a human blink per minute?",a: ["10", "17",    "30"],ok: 1, difficulty: "hard" },
-  { type: "Science 🔬", q: "What is the hardest substance on Earth?",a: ["Gold", "Diamond",      "Iron"],  ok: 1, difficulty: "hard" },
-  { type: "Science 🔬", q: "How long is the small intestine?",     a: ["3m",   "7m",             "15m"],  ok: 1, difficulty: "hard" },
-  { type: "Science 🔬", q: "What year did dinosaurs go extinct?",  a: ["65 million years ago", "10 million years ago", "1 million years ago"],ok: 0, difficulty: "hard" },
-  { type: "Science 🔬", q: "How many chambers does an octopus heart have?",a: ["1", "2",  "3"],ok: 2, difficulty: "hard" },
-  { type: "Science 🔬", q: "What is the smallest bone in the human body?",a: ["Mandible", "Stapes", "Scaphoid"],ok: 1, difficulty: "hard" },
-  { type: "Science 🔬", q: "How deep is the Mariana Trench?",      a: ["5000m", "11000m",        "20000m"],ok: 1, difficulty: "hard" },
-  { type: "Science 🔬", q: "What percentage of air is oxygen?",    a: ["10%",  "21%",            "35%"],  ok: 1, difficulty: "hard" },
-  { type: "Science 🔬", q: "How many teeth do adult humans have?",  a: ["28",   "32",             "36"],   ok: 1, difficulty: "hard" },
-  { type: "Science 🔬", q: "What is the speed of sound?",          a: ["300 m/s", "343 m/s",     "500 m/s"],ok: 1, difficulty: "hard" },
-  { type: "Science 🔬", q: "How long does it take Earth to orbit the Sun?",a: ["360 days", "365 days", "370 days"],ok: 1, difficulty: "hard" },
-
-  // --- GAME PUZZLES (Tic-Tac-Toe strategy questions) ---
-  { type: "🎮 Game Puzzle", q: "In tic-tac-toe, where should you place your first X? (Center is best)", a: ["Corner", "Center", "Edge"], ok: 1, difficulty: "easy" },
-  { type: "🎮 Game Puzzle", q: "If opponent takes center, what's the best response?", a: ["Take corner", "Block them", "Take edge"], ok: 0, difficulty: "normal" },
-  { type: "🎮 Game Puzzle", q: "How many possible winning lines are there in tic-tac-toe?", a: ["6", "8", "10"], ok: 1, difficulty: "normal" },
-  { type: "🎮 Game Puzzle", q: "What's the maximum number of moves before someone wins?", a: ["5", "7", "9"], ok: 0, difficulty: "hard" },
+  // --- HARD: Adjectives, opposites, precise vocabulary ---
+  { type: "Adjectives 💬",   q: "Which word means the opposite of 'clean'? 🧹",        a: ["Dirty",       "Happy",       "Big"],        ok: 0, difficulty: "hard" },
+  { type: "Adjectives 💬",   q: "Which word means the opposite of 'old'? 🆕",          a: ["New",         "Sad",         "Small"],      ok: 0, difficulty: "hard" },
+  { type: "Adjectives 💬",   q: "Which word means 'very very good'? 🌟",               a: ["Fantastic",   "Angry",       "Dirty"],      ok: 0, difficulty: "hard" },
+  { type: "Adjectives 💬",   q: "What word describes something that makes you laugh? 😄", a: ["Funny",    "Scary",       "Sad"],        ok: 0, difficulty: "hard" },
+  { type: "Adjectives 💬",   q: "Which word means the opposite of 'happy'? 😢",        a: ["Sad",         "Funny",       "Cool"],       ok: 0, difficulty: "hard" },
+  { type: "Adjectives 💬",   q: "Which word means the opposite of 'big'? 🐜",          a: ["Small",       "Ugly",        "Short"],      ok: 0, difficulty: "hard" },
+  { type: "Body 🧍",         q: "What do you call the part of the face you smell with? 👃", a: ["Nose",    "Chin",        "Ear"],        ok: 0, difficulty: "hard" },
+  { type: "Clothes 👕",      q: "What do you call long trousers made of denim? 👖",    a: ["Jeans",       "Skirt",       "Shorts"],     ok: 0, difficulty: "hard" },
+  { type: "Family 👨‍👩‍👦",      q: "What is another word for 'mum'? 👩",                  a: ["Mother",      "Sister",      "Cousin"],     ok: 0, difficulty: "hard" },
+  { type: "Food 🍽️",         q: "What do you call the yellow citrus fruit? 🍋",        a: ["Lemon",       "Lime",        "Kiwi"],       ok: 0, difficulty: "hard" },
+  { type: "Food 🍽️",         q: "What do you call the tropical yellow fruit? 🍌",      a: ["Banana",      "Mango",       "Pear"],       ok: 0, difficulty: "hard" },
+  { type: "School 📚",       q: "What do you call the room where you have lessons? 🏫", a: ["Classroom",  "Kitchen",     "Garden"],     ok: 0, difficulty: "hard" },
+  { type: "School 📚",       q: "What do you use to measure length? 📏",               a: ["Ruler",       "Pen",         "Eraser"],     ok: 0, difficulty: "hard" },
+  { type: "Sports 🏅",       q: "What sport uses a racket and a yellow ball? 🎾",      a: ["Tennis",      "Football",    "Hockey"],     ok: 0, difficulty: "hard" },
+  { type: "Transport 🚗",    q: "What do you call a two-wheeled vehicle with pedals? 🚴", a: ["Bike",     "Car",         "Bus"],        ok: 0, difficulty: "hard" },
+  { type: "World 🌍",        q: "What do you call the place where land meets the sea? 🏖️", a: ["Beach",   "Forest",      "Mountain"],   ok: 0, difficulty: "hard" },
+  { type: "World 🌍",        q: "What do you find in the sea that has a hard shell? 🐚", a: ["Shell",    "Stone",       "Leaf"],       ok: 0, difficulty: "hard" },
 ];
 
 // ================================================================
@@ -685,23 +708,23 @@ const ALL_QUESTIONS = [
 const CHEST_QUESTIONS = {
   easy: {
     type: "⭐ Boss Question ⭐",
-    q:  "You have 4 apples. Your friend gives you 3 more, but you eat 2. How many apples do you have?",
-    a:  ["4", "5", "6"],
-    ok: 1,  // 4 + 3 - 2 = 5 ✓
+    q:  "Look at these animals: Dog 🐕, Cat 🐈, Fish 🐟 — which of these can you keep as a PET at home?",
+    a:  ["All of them! 🐾", "Only fish 🐟", "Only dogs 🐕"],
+    ok: 0,
     difficulty: "easy"
   },
   normal: {
     type: "⭐ Boss Question ⭐",
-    q:  "You read 15 pages on Monday and 27 pages on Tuesday. How many pages total?",
-    a:  ["40", "42", "45"],
-    ok: 1,  // 15 + 27 = 42 ✓
+    q:  "Victor has a red T-shirt 👕, blue jeans 👖, and white shoes 👟. How many items of clothing does he have?",
+    a:  ["2", "3", "4"],
+    ok: 1,
     difficulty: "normal"
   },
   hard: {
     type: "⭐ Boss Question ⭐",
-    q:  "A recipe needs 2.5 cups of flour for 8 cookies. How many cups for 16 cookies?",
-    a:  ["3 cups", "5 cups", "7.5 cups"],
-    ok: 1,  // 2.5 × 2 = 5 ✓
+    q:  "Which sentence is correct? 🤔",
+    a:  ["She is happy", "She are happy", "She am happy"],
+    ok: 0,
     difficulty: "hard"
   }
 };
@@ -792,6 +815,18 @@ function startGame(difficulty) {
   // Filter questions by difficulty
   const filteredQuestions = ALL_QUESTIONS.filter(q => q.difficulty === difficulty);
 
+  // Pick random questions without repeats
+  const pickQuestions = (count) => {
+    const pool = [...filteredQuestions];
+    const picks = [];
+    for (let i = 0; i < count; i++) {
+      if (pool.length === 0) break;
+      const idx = Math.floor(Math.random() * pool.length);
+      picks.push(pool.splice(idx, 1)[0]);
+    }
+    return picks;
+  };
+
   state = {
     hearts:    5,
     answered:  0,
@@ -800,7 +835,7 @@ function startGame(difficulty) {
     correct:   0,        // total correct answers
     coins:     0,        // collected coins
     difficulty: difficulty,
-    questions: shuffle([...filteredQuestions]).slice(0, 5),
+    questions: pickQuestions(5),
     finalMode: false,
     busy:      false,
     current:   null,
