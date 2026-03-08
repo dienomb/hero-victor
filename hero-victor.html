@@ -841,23 +841,23 @@ const ALL_QUESTIONS = [
   { type: "Colours 🎨",      q: "What colour is an orange? 🍊",                        a: ["Orange",      "Purple",      "Pink"],       ok: 0, difficulty: "normal" },
 
   // --- HARD: Adjectives, opposites, precise vocabulary ---
-  { type: "Adjectives 💬",   q: "Which word means the opposite of 'clean'? 🧹",        a: ["Dirty",       "Happy",       "Big"],        ok: 0, difficulty: "hard" },
-  { type: "Adjectives 💬",   q: "Which word means the opposite of 'old'? 🆕",          a: ["New",         "Sad",         "Small"],      ok: 0, difficulty: "hard" },
+  { type: "Adjectives 💬",   q: "Which word means the opposite of 'clean'? 🧹",        a: ["Dirty",       "Dusty",       "Messy"],      ok: 0, difficulty: "hard" },
+  { type: "Adjectives 💬",   q: "Which word means the opposite of 'old'? 🆕",          a: ["New",         "Ancient",     "Modern"],     ok: 0, difficulty: "hard" },
   { type: "Adjectives 💬",   q: "Which word means 'very very good'? 🌟",               a: ["Fantastic",   "Angry",       "Dirty"],      ok: 0, difficulty: "hard" },
-  { type: "Adjectives 💬",   q: "What word describes something that makes you laugh? 😄", a: ["Funny",    "Scary",       "Sad"],        ok: 0, difficulty: "hard" },
-  { type: "Adjectives 💬",   q: "Which word means the opposite of 'happy'? 😢",        a: ["Sad",         "Funny",       "Cool"],       ok: 0, difficulty: "hard" },
+  { type: "Adjectives 💬",   q: "What word describes something that makes you laugh? 😄", a: ["Funny",    "Silly",       "Noisy"],      ok: 0, difficulty: "hard" },
+  { type: "Adjectives 💬",   q: "Which word means the opposite of 'happy'? 😢",        a: ["Sad",         "Upset",       "Excited"],    ok: 0, difficulty: "hard" },
   { type: "Adjectives 💬",   q: "Which word means the opposite of 'big'? 🐜",          a: ["Small",       "Ugly",        "Short"],      ok: 0, difficulty: "hard" },
   { type: "Body 🧍",         q: "What do you call the part of the face you smell with? 👃", a: ["Nose",    "Chin",        "Ear"],        ok: 0, difficulty: "hard" },
   { type: "Clothes 👕",      q: "What do you call long trousers made of denim? 👖",    a: ["Jeans",       "Skirt",       "Shorts"],     ok: 0, difficulty: "hard" },
   { type: "Family 👨‍👩‍👦",      q: "What is another word for 'mum'? 👩",                  a: ["Mother",      "Sister",      "Cousin"],     ok: 0, difficulty: "hard" },
-  { type: "Food 🍽️",         q: "What do you call the yellow citrus fruit? 🍋",        a: ["Lemon",       "Lime",        "Kiwi"],       ok: 0, difficulty: "hard" },
-  { type: "Food 🍽️",         q: "What do you call the tropical yellow fruit? 🍌",      a: ["Banana",      "Mango",       "Pear"],       ok: 0, difficulty: "hard" },
+  { type: "Food 🍽️",         q: "What do you call the yellow citrus fruit? 🍋",        a: ["Lemon",       "Lime",        "Melon"],      ok: 0, difficulty: "hard" },
+  { type: "Food 🍽️",         q: "What do you call the tropical yellow fruit? 🍌",      a: ["Banana",      "Papaya",      "Mango"],      ok: 0, difficulty: "hard" },
   { type: "School 📚",       q: "What do you call the room where you have lessons? 🏫", a: ["Classroom",  "Kitchen",     "Garden"],     ok: 0, difficulty: "hard" },
-  { type: "School 📚",       q: "What do you use to measure length? 📏",               a: ["Ruler",       "Pen",         "Eraser"],     ok: 0, difficulty: "hard" },
+  { type: "School 📚",       q: "What do you use to measure length? 📏",               a: ["Ruler",       "Tape",        "Compass"],    ok: 0, difficulty: "hard" },
   { type: "Sports 🏅",       q: "What sport uses a racket and a yellow ball? 🎾",      a: ["Tennis",      "Football",    "Hockey"],     ok: 0, difficulty: "hard" },
   { type: "Transport 🚗",    q: "What do you call a two-wheeled vehicle with pedals? 🚴", a: ["Bike",     "Car",         "Bus"],        ok: 0, difficulty: "hard" },
   { type: "World 🌍",        q: "What do you call the place where land meets the sea? 🏖️", a: ["Beach",   "Forest",      "Mountain"],   ok: 0, difficulty: "hard" },
-  { type: "World 🌍",        q: "What do you find in the sea that has a hard shell? 🐚", a: ["Shell",    "Stone",       "Leaf"],       ok: 0, difficulty: "hard" },
+  { type: "World 🌍",        q: "What do you find in the sea that has a hard shell? 🐚", a: ["Shell",    "Pebble",      "Coral"],      ok: 0, difficulty: "hard" },
 ];
 
 // ================================================================
@@ -880,8 +880,8 @@ const CHEST_QUESTIONS = {
   },
   hard: {
     type: "⭐ Boss Question ⭐",
-    q:  "Which sentence is correct? 🤔",
-    a:  ["She is happy", "She are happy", "She am happy"],
+    q:  "Choose the sentence with correct grammar and punctuation. 🤔",
+    a:  ["She is happy.", "She are happy.", "She is happy?"],
     ok: 0,
     difficulty: "hard"
   }
@@ -896,7 +896,11 @@ const STOPS = ['5%', '18%', '31%', '44%', '57%', '70%', '83%'];
 const HERO_START_PERCENT = 5;
 const HERO_END_PERCENT = 83;
 const QUESTIONS_PER_ROUND = 12;
-const CHECKPOINT_TARGETS = [3, 5, 8, 10, 12];
+const QUESTIONS_PER_ROUND_BY_DIFFICULTY = {
+  easy: 12,
+  normal: 12,
+  hard: 14
+};
 const REWARD_TABLE = {
   easy:   { base: 2, streak3: 1, streak6: 1, completion: 10 },
   normal: { base: 4, streak3: 2, streak6: 2, completion: 15 },
@@ -994,6 +998,8 @@ function startGame(difficulty) {
     return picks;
   };
 
+  const questionsPerRound = QUESTIONS_PER_ROUND_BY_DIFFICULTY[difficulty] ?? QUESTIONS_PER_ROUND;
+
   state = {
     hearts:    5,
     answered:  0,
@@ -1002,7 +1008,8 @@ function startGame(difficulty) {
     correct:   0,        // total correct answers
     coins:     0,        // collected coins
     difficulty: difficulty,
-    questions: pickQuestions(QUESTIONS_PER_ROUND),
+    questionsPerRound: questionsPerRound,
+    questions: pickQuestions(questionsPerRound),
     busy:      false,
     current:   null,
   };
@@ -1117,7 +1124,7 @@ function onCorrect() {
   const nextHeroPercent = getHeroPercentForAnswered(state.answered);
   const nextPetPercent = getPetPercentForHero(nextHeroPercent);
 
-  if (state.answered >= QUESTIONS_PER_ROUND) {
+  if (state.answered >= getRoundQuestionCount()) {
     // Round complete — WIN!
     moveHeroToPercent(nextHeroPercent, true, () => {
       movePetToPercent(nextPetPercent, true);
@@ -1248,25 +1255,34 @@ function renderHearts() {
   }
 }
 
+function getRoundQuestionCount() {
+  return state.questionsPerRound || QUESTIONS_PER_ROUND;
+}
+
+function getCheckpointTargets() {
+  const total = getRoundQuestionCount();
+  return [0.2, 0.4, 0.6, 0.8, 1].map((ratio) => Math.max(1, Math.round(total * ratio)));
+}
+
 function renderProgress() {
-  document.getElementById('progress').textContent = `⭐ ${state.answered} / ${QUESTIONS_PER_ROUND}`;
+  document.getElementById('progress').textContent = `⭐ ${state.answered} / ${getRoundQuestionCount()}`;
 }
 
 function updateCheckpointStars() {
   for (let i = 1; i <= 5; i++) {
-    const target = CHECKPOINT_TARGETS[i - 1];
+    const target = getCheckpointTargets()[i - 1];
     document.getElementById('cp' + i).classList.toggle('lit', state.answered >= target);
   }
 }
 
 function getStopForAnswered(answered) {
   if (answered <= 0) return 0;
-  return Math.min(5, Math.floor((answered / QUESTIONS_PER_ROUND) * 5));
+  return Math.min(5, Math.floor((answered / getRoundQuestionCount()) * 5));
 }
 
 function getHeroPercentForAnswered(answered) {
-  const clamped = Math.max(0, Math.min(QUESTIONS_PER_ROUND, answered));
-  const step = (HERO_END_PERCENT - HERO_START_PERCENT) / QUESTIONS_PER_ROUND;
+  const clamped = Math.max(0, Math.min(getRoundQuestionCount(), answered));
+  const step = (HERO_END_PERCENT - HERO_START_PERCENT) / getRoundQuestionCount();
   return HERO_START_PERCENT + step * clamped;
 }
 
@@ -1280,7 +1296,7 @@ function getCoinsForCorrectAnswer() {
 
   if (state.streak >= 3) coins += rewards.streak3;
   if (state.streak >= 6) coins += rewards.streak6;
-  if (state.answered + 1 === QUESTIONS_PER_ROUND) coins += rewards.completion;
+  if (state.answered + 1 === getRoundQuestionCount()) coins += rewards.completion;
 
   return coins;
 }
