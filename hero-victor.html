@@ -985,16 +985,25 @@ function playSound(type) {
 function startGame(difficulty) {
   // Filter questions by difficulty
   const filteredQuestions = ALL_QUESTIONS.filter(q => q.difficulty === difficulty);
+  const bossQuestion = CHEST_QUESTIONS[difficulty];
 
   // Pick random questions without repeats
-  const pickQuestions = (count) => {
+  const pickQuestions = (count, includeBossQuestion = false) => {
     const pool = [...filteredQuestions];
     const picks = [];
-    for (let i = 0; i < count; i++) {
+    const normalQuestionCount = includeBossQuestion ? Math.max(0, count - 1) : count;
+
+    for (let i = 0; i < normalQuestionCount; i++) {
       if (pool.length === 0) break;
       const idx = Math.floor(Math.random() * pool.length);
-      picks.push(pool.splice(idx, 1)[0]);
+      const chosenQuestion = pool.splice(idx, 1)[0];
+      picks.push({ ...chosenQuestion, a: [...chosenQuestion.a] });
     }
+
+    if (includeBossQuestion && bossQuestion) {
+      picks.push({ ...bossQuestion, a: [...bossQuestion.a] });
+    }
+
     return picks;
   };
 
@@ -1009,7 +1018,7 @@ function startGame(difficulty) {
     coins:     0,        // collected coins
     difficulty: difficulty,
     questionsPerRound: questionsPerRound,
-    questions: pickQuestions(questionsPerRound),
+    questions: pickQuestions(questionsPerRound, true),
     busy:      false,
     current:   null,
   };
