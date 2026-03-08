@@ -191,6 +191,57 @@
       transform: rotate(-115deg);
     }
 
+    /* ===== ENEMY STAGE ===== */
+    #enemy-stage {
+      position: absolute;
+      right: 14%;
+      bottom: 120px;
+      width: 130px;
+      min-height: 120px;
+      border-radius: 14px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      color: #fff;
+      z-index: 9;
+      transform: translateX(0);
+      opacity: 1;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    #enemy-stage.entering {
+      transform: translateX(20px);
+      opacity: 0;
+    }
+
+    #enemy-stage.exiting {
+      transform: translateX(20px);
+      opacity: 0;
+    }
+
+    #enemy-avatar {
+      font-size: 42px;
+      line-height: 1;
+    }
+
+    #enemy-name {
+      font-size: 13px;
+      font-weight: 800;
+      font-family: 'Nunito', cursive;
+      text-align: center;
+    }
+
+    #enemy-progress {
+      font-size: 12px;
+      color: #ffd37d;
+      font-weight: 700;
+      font-family: 'Nunito', cursive;
+    }
+
     /* ===== QUESTION PANEL ===== */
     #panel {
       width: 100%;
@@ -248,7 +299,7 @@
     #route-chooser {
       width: 100%;
       max-width: 760px;
-      display: none;
+      display: none !important;
       gap: 10px;
       margin-bottom: 4px;
     }
@@ -335,6 +386,16 @@
       padding: 5px 10px;
       border-radius: 999px;
       background: rgba(21, 104, 148, 0.4);
+    }
+
+    #mushroom-indicator {
+      font-size: 12px;
+      color: #ffe08a;
+      font-family: 'Nunito', cursive;
+      font-weight: 800;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(140, 80, 20, 0.35);
     }
 
     #btns { display: flex; gap: 14px; margin-bottom: 10px; }
@@ -840,6 +901,12 @@
       </svg>
     </div>
 
+    <div id="enemy-stage">
+      <div id="enemy-avatar">🧟</div>
+      <div id="enemy-name">Shadow Scout</div>
+      <div id="enemy-progress">Question 1 / 3</div>
+    </div>
+
     <!-- Treasure Chest -->
     <div id="chest-wrap">
       <svg viewBox="0 0 62 58" xmlns="http://www.w3.org/2000/svg">
@@ -872,14 +939,10 @@
   <!-- ===== QUESTION PANEL ===== -->
   <div id="panel">
     <div id="boss-phase"></div>
-    <div id="route-chooser">
-      <button class="route-btn route-safe" onclick="chooseRoute('safe')">Safe Trail<br><span>Steady rewards + hint chance</span></button>
-      <button class="route-btn route-treasure" onclick="chooseRoute('treasure')">Treasure Trail<br><span>Bigger rewards + more risk</span></button>
-    </div>
     <div id="q-type">Loading...</div>
     <div id="q-text">Get ready!</div>
     <div id="powerups">
-      <button id="hint-btn" class="power-btn" onclick="useHint()">Hint (<span id="hint-count">0</span>)</button>
+      <span id="mushroom-indicator">🍄 Mushroom hearts can drop on correct answers</span>
       <button id="double-btn" class="power-btn" onclick="useDoubleCoins()">Double Coins (<span id="double-count">0</span>)</button>
       <span id="shield-indicator">Shield: <span id="shield-count">0</span></span>
     </div>
@@ -1024,7 +1087,6 @@ const BOSS_PHASES = {
 const STOPS = ['5%', '18%', '31%', '44%', '57%', '70%', '83%'];
 const HERO_START_PERCENT = 5;
 const HERO_END_PERCENT = 83;
-const ROUTES = ['safe', 'treasure'];
 const BOSS_PHASE_COUNT = 3;
 const QUESTIONS_PER_ROUND = 12;
 const QUESTIONS_PER_ROUND_BY_DIFFICULTY = {
@@ -1033,13 +1095,21 @@ const QUESTIONS_PER_ROUND_BY_DIFFICULTY = {
   hard: 14
 };
 const REWARD_TABLE = {
-  easy:   { base: 3, completion: 8 },
-  normal: { base: 5, completion: 12 },
-  hard:   { base: 7, completion: 16 }
+  easy:   { base: 5, completion: 10 },
+  normal: { base: 7, completion: 14 },
+  hard:   { base: 9, completion: 18 }
 };
 
+const ENEMY_ROSTER = [
+  { name: "Shadow Scout", avatar: "🧟" },
+  { name: "Quiz Knight", avatar: "🛡️" },
+  { name: "Forest Witch", avatar: "🧙" },
+  { name: "Sky Pirate", avatar: "🏴‍☠️" },
+  { name: "Cave Troll", avatar: "👹" },
+  { name: "Riddle Robot", avatar: "🤖" }
+];
+
 let state = {};
-let selectedRoute = 0;
 
 ALL_QUESTIONS.forEach((q, i) => {
   if (!q.pathAffinity) q.pathAffinity = ['safe', 'treasure', 'mixed'][i % 3];
@@ -1135,16 +1205,19 @@ function startGame(difficulty) {
     difficulty: difficulty,
     questionsPerRound: questionsPerRound,
     questions: filteredQuestions.map(q => ({ ...q, a: [...q.a] })),
-    usedQuestionKeys: new Set(),
-    pathChoiceHistory: [],
-    currentRoute: null,
-    inventory: { hints: 1, shields: 0, doubleCoins: 0 },
+    questionPool: [],
+    poolIndex: 0,
+    inventory: { shields: 0, doubleCoins: 0 },
     pendingDoubleCoins: false,
-    inBoss: false,
-    bossPhase: 0,
+    enemiesDefeated: 0,
+    currentEnemy: null,
+    enemyQuestions: [],
+    enemyQuestionIndex: 0,
     busy: false,
     current: null
   };
+
+  refillQuestionPool(true);
 
   document.getElementById('panel').style.display = 'flex';
   renderHearts();
@@ -1159,7 +1232,7 @@ function startGame(difficulty) {
   renderInventory();
   renderBossPhase();
   setOverlay(null);
-  showRouteChooser();
+  spawnEnemy();
 }
 
 function initGame() {
@@ -1167,77 +1240,27 @@ function initGame() {
   setOverlay('difficulty-screen');
 }
 
-function showRouteChooser() {
-  state.current = null;
-  state.currentRoute = null;
-  selectedRoute = 0;
-  selectedAnswer = null;
-  document.getElementById('route-chooser').classList.add('active');
-  highlightRouteSelection(selectedRoute);
-  document.getElementById('q-type').textContent = 'Choose Route';
-  document.getElementById('q-text').textContent = 'Pick a trail before this checkpoint.';
-  setAnswerButtonsEnabled(false);
-  showFeedback('info', 'Safe trail = steadier rewards. Treasure trail = bigger rewards + more risk.');
-  renderInventory();
-  renderBossPhase();
+function refillQuestionPool(force = false) {
+  if (!force && state.poolIndex < state.questionPool.length) return;
+  state.questionPool = shuffle(state.questions.map(q => ({ ...q, a: [...q.a] })));
+  state.poolIndex = 0;
 }
 
-function chooseRoute(route) {
-  if (state.busy || state.inBoss || state.answered >= getRoundQuestionCount()) return;
-  state.currentRoute = route;
-  state.pathChoiceHistory.push(route);
-  document.getElementById('route-chooser').classList.remove('active');
-  const nextQ = pickQuestionByRoute(route);
-  if (!nextQ) {
-    startBossMode();
-    return;
+function nextQuestionFromPool() {
+  if (state.poolIndex >= state.questionPool.length) {
+    refillQuestionPool(true);
   }
-  loadQuestion(nextQ);
+  const q = state.questionPool[state.poolIndex++];
+  return { ...q, a: [...q.a] };
 }
 
-function pickQuestionByRoute(route) {
-  const unused = state.questions.filter(q => !state.usedQuestionKeys.has(q.q));
-  if (!unused.length) return null;
-
-  let candidates = unused.filter(q => q.pathAffinity === route || q.pathAffinity === 'mixed');
-  if (route === 'safe') {
-    const lighter = candidates.filter(q => q.cognitiveLoad !== 'high');
-    if (lighter.length) candidates = lighter;
-  } else {
-    const stronger = candidates.filter(q => q.distractorStrength >= 2);
-    if (stronger.length) candidates = stronger;
-  }
-  if (!candidates.length) candidates = unused;
-
-  const chosen = candidates[Math.floor(Math.random() * candidates.length)];
-  state.usedQuestionKeys.add(chosen.q);
-  return { ...chosen, a: [...chosen.a] };
-}
-
-function startBossMode() {
-  state.inBoss = true;
-  state.bossPhase = 0;
-  renderBossPhase();
-  loadBossQuestion();
-}
-
-function loadBossQuestion() {
-  const phases = BOSS_PHASES[state.difficulty] || [];
-  const phaseQ = phases[state.bossPhase];
-  if (!phaseQ) {
-    finishRun();
-    return;
-  }
-  const q = {
-    ...phaseQ,
-    difficulty: state.difficulty,
-    pathAffinity: 'mixed',
-    rewardBand: state.bossPhase === 2 ? 'mystery' : 'challenge',
-    cognitiveLoad: 'high',
-    distractorStrength: 3
-  };
-  loadQuestion(q);
-  showFeedback('info', state.bossPhase === 1 ? 'Boss phase 2: use power-ups now if needed.' : 'Boss battle phase!');
+function spawnEnemy() {
+  state.currentEnemy = ENEMY_ROSTER[Math.floor(Math.random() * ENEMY_ROSTER.length)];
+  state.enemyQuestions = [nextQuestionFromPool(), nextQuestionFromPool(), nextQuestionFromPool()];
+  state.enemyQuestionIndex = 0;
+  renderEnemy(true);
+  loadQuestion(state.enemyQuestions[0]);
+  showFeedback('info', `${state.currentEnemy.name} challenges you!`);
 }
 
 // ================================================================
@@ -1276,6 +1299,7 @@ function loadQuestion(qObj) {
 
   renderInventory();
   renderBossPhase();
+  renderEnemy(false);
   state.busy = false;
 }
 
@@ -1300,10 +1324,11 @@ function answer(idx) {
     state.streak++;
     const outcome = getCoinsForCorrectAnswer();
     state.coins += outcome.coins;
-    state.inventory.hints += outcome.hints;
+    state.hearts = Math.min(5, state.hearts + outcome.hearts);
     state.inventory.shields += outcome.shields;
     state.inventory.doubleCoins += outcome.doubleCoins;
     renderCoins();
+    renderHearts();
     showCoinPopup(outcome.coins);
     renderStreak();
     renderInventory();
@@ -1341,41 +1366,31 @@ function answer(idx) {
 }
 
 function onCorrect() {
-  if (state.inBoss) {
-    state.bossPhase++;
-    if (state.bossPhase >= BOSS_PHASE_COUNT) {
-      finishRun();
-      return;
-    }
-    loadBossQuestion();
-    state.busy = false;
-    return;
-  }
-
   state.answered++;
+  state.enemyQuestionIndex++;
   renderProgress();
-  updateCheckpointStars();
-  const nextHeroPercent = getHeroPercentForAnswered(state.answered);
-  const nextPetPercent = getPetPercentForHero(nextHeroPercent);
+  renderBossPhase();
 
-  if (state.answered >= getRoundQuestionCount()) {
-    moveHeroToPercent(nextHeroPercent, true, () => {
-      movePetToPercent(nextPetPercent, true);
-      startBossMode();
-    });
+  if (state.enemyQuestionIndex < 3) {
+    state.busy = false;
+    loadQuestion(state.enemyQuestions[state.enemyQuestionIndex]);
     return;
   }
 
-  moveHeroToPercent(nextHeroPercent, true, () => {
-    movePetToPercent(nextPetPercent, true);
-    state.busy = false;
-    showRouteChooser();
-  });
-}
+  state.enemiesDefeated++;
+  state.coins += 10;
+  renderCoins();
+  showCoinPopup(10);
+  renderProgress();
+  state.currentEnemy = null;
+  renderBossPhase();
+  renderEnemy(false);
 
-function finishRun() {
-  openChest();
-  setTimeout(() => setOverlay('win-screen'), 1200);
+  setTimeout(() => {
+    if (state.hearts <= 0) return;
+    state.busy = false;
+    spawnEnemy();
+  }, 350);
 }
 
 // ================================================================
@@ -1502,7 +1517,7 @@ function getCheckpointTargets() {
 }
 
 function renderProgress() {
-  document.getElementById('progress').textContent = `⭐ ${state.answered} / ${getRoundQuestionCount()}`;
+  document.getElementById('progress').textContent = `⚔️ Defeated: ${state.enemiesDefeated}`;
 }
 
 function updateCheckpointStars() {
@@ -1529,15 +1544,11 @@ function getPetPercentForHero(heroPercent) {
 
 function getCoinsForCorrectAnswer() {
   const rewards = REWARD_TABLE[state.difficulty] || REWARD_TABLE.normal;
-  const route = state.inBoss ? 'boss' : (state.currentRoute || 'safe');
-  const routeMultiplier = route === 'treasure' ? 1.5 : (route === 'boss' ? 1.4 : 1);
+  const routeMultiplier = 1.3;
   const bandBonus = state.current.rewardBand === 'mystery' ? 3 : (state.current.rewardBand === 'challenge' ? 2 : 0);
   const streakBonus = Math.floor(state.streak / 3);
   let coins = Math.round((rewards.base + bandBonus + streakBonus) * routeMultiplier);
-
-  if (!state.inBoss && state.answered + 1 === getRoundQuestionCount()) {
-    coins += rewards.completion;
-  }
+  if (state.enemyQuestionIndex === 2) coins += rewards.completion;
 
   let boostText = '';
   if (state.pendingDoubleCoins) {
@@ -1546,56 +1557,34 @@ function getCoinsForCorrectAnswer() {
     boostText = ' Double coins used.';
   }
 
-  const event = getRouteEvent(route, state.current.rewardBand, state.inBoss);
+  const event = getRewardEvent(state.current.rewardBand);
   coins += event.coins;
-  const routeLabel = route === 'treasure' ? 'Treasure Trail' : (route === 'safe' ? 'Safe Trail' : 'Boss');
 
   return {
     coins,
-    hints: event.hints,
+    hearts: event.hearts,
     shields: event.shields,
     doubleCoins: event.doubleCoins,
-    message: `Correct! ${routeLabel} reward: ${coins} coins.${event.message}${boostText}`
+    message: `Correct! Reward: ${coins} coins.${event.message}${boostText}`
   };
 }
 
-function getRouteEvent(route, rewardBand, isBoss) {
+function getRewardEvent(rewardBand) {
   const roll = Math.random();
-  const event = { coins: 0, hints: 0, shields: 0, doubleCoins: 0, message: '' };
+  const event = { coins: 0, hearts: 0, shields: 0, doubleCoins: 0, message: '' };
 
-  if (isBoss) {
-    if (roll < 0.25) {
-      event.coins = 6;
-      event.message = ' Boss bonus +6.';
-    } else if (roll < 0.38) {
-      event.shields = 1;
-      event.message = ' Found shield.';
-    }
-    return event;
-  }
-
-  if (route === 'safe') {
-    if (roll < 0.28) {
-      event.hints = 1;
-      event.message = ' Found hint.';
-    } else if (roll < 0.40) {
-      event.shields = 1;
-      event.message = ' Found shield.';
-    } else if (roll < 0.60) {
-      event.coins = 2;
-      event.message = ' Bonus +2.';
-    }
-  } else {
-    if (roll < 0.26) {
-      event.doubleCoins = 1;
-      event.message = ' Earned Double Coins.';
-    } else if (roll < 0.38) {
-      event.shields = 1;
-      event.message = ' Found shield.';
-    } else if (roll < 0.68) {
-      event.coins = 4;
-      event.message = ' Treasure bonus +4.';
-    }
+  if (roll < 0.30) {
+    event.coins = 4;
+    event.message = ' Bonus +4.';
+  } else if (roll < 0.45) {
+    event.doubleCoins = 1;
+    event.message = ' Earned Double Coins.';
+  } else if (roll < 0.56) {
+    event.shields = 1;
+    event.message = ' Found shield.';
+  } else if (roll < 0.68 && state.hearts < 5) {
+    event.hearts = 1;
+    event.message = ' 🍄 Mushroom! +1 heart.';
   }
 
   if (rewardBand === 'mystery' && Math.random() < 0.2) {
@@ -1638,26 +1627,41 @@ function renderCoins() {
 }
 
 function renderInventory() {
-  const hints = state.inventory?.hints ?? 0;
   const shields = state.inventory?.shields ?? 0;
   const doubles = state.inventory?.doubleCoins ?? 0;
 
-  document.getElementById('hint-count').textContent = hints;
   document.getElementById('double-count').textContent = doubles;
   document.getElementById('shield-count').textContent = shields;
 
   const noQuestion = !state.current || state.busy;
-  document.getElementById('hint-btn').disabled = hints <= 0 || noQuestion;
   document.getElementById('double-btn').disabled = doubles <= 0 || state.pendingDoubleCoins || noQuestion;
 }
 
 function renderBossPhase() {
   const el = document.getElementById('boss-phase');
-  if (!state.inBoss) {
+  if (!state.currentEnemy) {
     el.textContent = '';
     return;
   }
-  el.textContent = `Boss Phase ${state.bossPhase + 1} / ${BOSS_PHASE_COUNT}`;
+  el.textContent = `${state.currentEnemy.name} • Question ${state.enemyQuestionIndex + 1} / 3`;
+}
+
+function renderEnemy(entering) {
+  const stage = document.getElementById('enemy-stage');
+  if (!state.currentEnemy) {
+    stage.classList.add('exiting');
+    return;
+  }
+
+  document.getElementById('enemy-name').textContent = state.currentEnemy.name;
+  document.getElementById('enemy-avatar').textContent = state.currentEnemy.avatar;
+  document.getElementById('enemy-progress').textContent = `Question ${state.enemyQuestionIndex + 1} / 3`;
+
+  stage.classList.remove('exiting');
+  if (entering) {
+    stage.classList.add('entering');
+    setTimeout(() => stage.classList.remove('entering'), 20);
+  }
 }
 
 function setAnswerButtonsEnabled(enabled) {
@@ -1730,31 +1734,12 @@ function showFeedback(type, message) {
   feedbackEl.className = type;
 }
 
-function useHint() {
-  if (state.busy || !state.current || state.inventory.hints <= 0) return;
-  const btns = document.querySelectorAll('.btn');
-  const wrong = [0, 1, 2].filter(i => i !== state.current.ok && !btns[i].disabled);
-  if (!wrong.length) return;
-  const idx = wrong[Math.floor(Math.random() * wrong.length)];
-  btns[idx].disabled = true;
-  btns[idx].style.opacity = '0.35';
-  state.inventory.hints--;
-  renderInventory();
-  showFeedback('info', 'Hint used: one wrong answer removed.');
-}
-
 function useDoubleCoins() {
   if (state.busy || !state.current || state.inventory.doubleCoins <= 0 || state.pendingDoubleCoins) return;
   state.inventory.doubleCoins--;
   state.pendingDoubleCoins = true;
   renderInventory();
   showFeedback('info', 'Double Coins armed for the next correct answer.');
-}
-
-function highlightRouteSelection(idx) {
-  document.querySelectorAll('.route-btn').forEach((btn, i) => {
-    btn.classList.toggle('selected', i === idx);
-  });
 }
 
 function resetStars() {
@@ -1783,7 +1768,7 @@ function resetGame() {
   document.querySelectorAll('.confetti').forEach(el => el.remove());
   document.getElementById('hero').classList.remove('celebrate', 'walk', 'shake');
   document.getElementById('pet').classList.remove('celebrate');
-  document.getElementById('route-chooser').classList.remove('active');
+  document.getElementById('enemy-stage').classList.remove('entering', 'exiting');
   document.getElementById('boss-phase').textContent = '';
   showFeedback('info', '');
   setOverlay('difficulty-screen');
@@ -1806,31 +1791,6 @@ document.addEventListener('keydown', (e) => {
   const overlayVisible = ['difficulty-screen', 'win-screen', 'lose-screen']
     .some(id => document.getElementById(id).style.display === 'flex');
   if (overlayVisible) return;
-
-  const routeOpen = document.getElementById('route-chooser').classList.contains('active');
-  if (routeOpen) {
-    if (e.key === 'ArrowLeft') {
-      e.preventDefault();
-      selectedRoute = 0;
-      highlightRouteSelection(selectedRoute);
-    } else if (e.key === 'ArrowRight') {
-      e.preventDefault();
-      selectedRoute = 1;
-      highlightRouteSelection(selectedRoute);
-    } else if (e.key === '1' || e.key === 'a' || e.key === 'A') {
-      chooseRoute('safe');
-    } else if (e.key === '2' || e.key === 'd' || e.key === 'D') {
-      chooseRoute('treasure');
-    } else if (e.key === 'Enter') {
-      chooseRoute(ROUTES[selectedRoute]);
-    }
-    return;
-  }
-
-  if (e.key === 'h' || e.key === 'H') {
-    useHint();
-    return;
-  }
 
   if (e.key === 'x' || e.key === 'X') {
     useDoubleCoins();
