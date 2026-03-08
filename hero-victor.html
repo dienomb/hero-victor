@@ -234,109 +234,6 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    #boss-phase {
-      min-height: 20px;
-      color: #ffe08a;
-      font-size: 12px;
-      letter-spacing: 1px;
-      font-family: 'Nunito', cursive;
-      font-weight: 800;
-      text-transform: uppercase;
-      text-align: center;
-    }
-
-    #route-chooser {
-      width: 100%;
-      max-width: 760px;
-      display: none;
-      gap: 10px;
-      margin-bottom: 4px;
-    }
-
-    #route-chooser.active {
-      display: flex;
-    }
-
-    .route-btn {
-      flex: 1;
-      border: none;
-      border-radius: 14px;
-      padding: 11px 8px;
-      color: white;
-      font-family: 'Nunito', cursive;
-      font-size: 15px;
-      font-weight: 800;
-      cursor: pointer;
-      text-align: center;
-      transition: transform 0.15s ease, filter 0.15s ease;
-    }
-
-    .route-btn span {
-      font-size: 12px;
-      font-weight: 700;
-      opacity: 0.95;
-    }
-
-    .route-btn:hover {
-      transform: translateY(-2px);
-      filter: brightness(1.06);
-    }
-
-    .route-btn.selected {
-      box-shadow: 0 0 0 3px rgba(255,255,255,0.45);
-    }
-
-    .route-btn:focus-visible {
-      outline: 3px solid rgba(255,255,255,0.6);
-      outline-offset: 2px;
-    }
-
-    .route-safe { background: linear-gradient(135deg, #247a5a, #2fa37b); }
-    .route-treasure { background: linear-gradient(135deg, #8a4d0f, #e08a1f); }
-
-    #powerups {
-      width: 100%;
-      max-width: 760px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .power-btn {
-      border: none;
-      border-radius: 999px;
-      padding: 6px 12px;
-      font-family: 'Nunito', cursive;
-      font-size: 12px;
-      font-weight: 800;
-      color: #f8f0ff;
-      background: rgba(255,255,255,0.14);
-      cursor: pointer;
-      transition: background 0.2s ease, transform 0.15s ease;
-    }
-
-    .power-btn:hover:not(:disabled) {
-      background: rgba(255,255,255,0.24);
-      transform: translateY(-1px);
-    }
-
-    .power-btn:disabled {
-      opacity: 0.45;
-      cursor: default;
-    }
-
-    #shield-indicator {
-      font-size: 12px;
-      color: #b7e5ff;
-      font-family: 'Nunito', cursive;
-      font-weight: 800;
-      padding: 5px 10px;
-      border-radius: 999px;
-      background: rgba(21, 104, 148, 0.4);
-    }
-
     #btns { display: flex; gap: 14px; margin-bottom: 10px; }
 
     #feedback {
@@ -350,7 +247,6 @@
 
     #feedback.correct { color: #2ecc71; }
     #feedback.wrong { color: #e74c3c; }
-    #feedback.info { color: #f8d97a; }
 
     @keyframes slideIn {
       from { opacity: 0; transform: translateY(-10px); }
@@ -630,28 +526,11 @@
         gap: 8px;
       }
 
-      #route-chooser {
-        flex-direction: column;
-      }
-
-      .route-btn {
-        width: 100%;
-        font-size: 14px;
-      }
-
       .btn {
         min-width: 0;
         width: calc(33.333% - 6px);
         padding: 10px 8px;
         font-size: 14px;
-      }
-
-      #powerups {
-        gap: 6px;
-      }
-
-      .power-btn {
-        font-size: 11px;
       }
 
       .overlay h1 {
@@ -695,10 +574,6 @@
 
       #btns {
         flex-direction: column;
-      }
-
-      #powerups {
-        width: 100%;
       }
 
       .btn {
@@ -871,18 +746,8 @@
 
   <!-- ===== QUESTION PANEL ===== -->
   <div id="panel">
-    <div id="boss-phase"></div>
-    <div id="route-chooser">
-      <button class="route-btn route-safe" onclick="chooseRoute('safe')">Safe Trail<br><span>Steady rewards + hint chance</span></button>
-      <button class="route-btn route-treasure" onclick="chooseRoute('treasure')">Treasure Trail<br><span>Bigger rewards + more risk</span></button>
-    </div>
     <div id="q-type">Loading...</div>
     <div id="q-text">Get ready!</div>
-    <div id="powerups">
-      <button id="hint-btn" class="power-btn" onclick="useHint()">Hint (<span id="hint-count">0</span>)</button>
-      <button id="double-btn" class="power-btn" onclick="useDoubleCoins()">Double Coins (<span id="double-count">0</span>)</button>
-      <span id="shield-indicator">Shield: <span id="shield-count">0</span></span>
-    </div>
     <div id="btns">
       <button class="btn btn-a" onclick="answer(0)">A) ?</button>
       <button class="btn btn-b" onclick="answer(1)">B) ?</button>
@@ -996,24 +861,30 @@ const ALL_QUESTIONS = [
 ];
 
 // ================================================================
-// FINAL BOSS QUESTIONS (3 PHASES)
+// ✏️  FINAL CHEST QUESTIONS — The boss questions to open the chest!
 // ================================================================
-const BOSS_PHASES = {
-  easy: [
-    { type: "Boss Phase 1", q: "Victor has a red T-shirt, blue jeans, and white shoes. How many clothing items does he have?", a: ["2", "3", "4"], ok: 1 },
-    { type: "Boss Phase 2", q: "Pick the best sentence.", a: ["She have a kite.", "She has a kite.", "She haves a kite."], ok: 1 },
-    { type: "Boss Phase 3", q: "A basket has 9 apples. 3 are eaten, then 2 are added. How many now?", a: ["7", "8", "9"], ok: 1 }
-  ],
-  normal: [
-    { type: "Boss Phase 1", q: "A class has 18 students. 6 go to the library. How many stay in class?", a: ["10", "11", "12"], ok: 2 },
-    { type: "Boss Phase 2", q: "Choose the sentence with correct punctuation.", a: ["Where does she live?", "Where does she lives?", "Where do she live?"], ok: 0 },
-    { type: "Boss Phase 3", q: "You buy 2 notebooks at 4 coins each and 1 pencil at 3 coins. Total?", a: ["10", "11", "12"], ok: 1 }
-  ],
-  hard: [
-    { type: "Boss Phase 1", q: "A trail is 24 steps long. You walk half, then 4 more. How many steps walked?", a: ["14", "16", "18"], ok: 1 },
-    { type: "Boss Phase 2", q: "All trees in this park are green this spring. Oak is a tree in this park. Which must be true?", a: ["Oak is green this spring.", "Oak is always green.", "Oak is not a tree."], ok: 0 },
-    { type: "Boss Phase 3", q: "Code puzzle: first number is 3 less than 12, second is double 4, third is 10 minus 7. Which code?", a: ["9-8-3", "8-9-3", "9-7-4"], ok: 0 }
-  ]
+const CHEST_QUESTIONS = {
+  easy: {
+    type: "⭐ Boss Question ⭐",
+    q:  "Look at these animals: Dog 🐕, Cat 🐈, Fish 🐟 — which of these can you keep as a PET at home?",
+    a:  ["All of them! 🐾", "Only fish 🐟", "Only dogs 🐕"],
+    ok: 0,
+    difficulty: "easy"
+  },
+  normal: {
+    type: "⭐ Boss Question ⭐",
+    q:  "Victor has a red T-shirt 👕, blue jeans 👖, and white shoes 👟. How many items of clothing does he have?",
+    a:  ["2", "3", "4"],
+    ok: 1,
+    difficulty: "normal"
+  },
+  hard: {
+    type: "⭐ Boss Question ⭐",
+    q:  "Choose the sentence with correct grammar and punctuation. 🤔",
+    a:  ["She is happy.", "She are happy.", "She is happy?"],
+    ok: 0,
+    difficulty: "hard"
+  }
 };
 
 // ================================================================
@@ -1024,8 +895,6 @@ const BOSS_PHASES = {
 const STOPS = ['5%', '18%', '31%', '44%', '57%', '70%', '83%'];
 const HERO_START_PERCENT = 5;
 const HERO_END_PERCENT = 83;
-const ROUTES = ['safe', 'treasure'];
-const BOSS_PHASE_COUNT = 3;
 const QUESTIONS_PER_ROUND = 12;
 const QUESTIONS_PER_ROUND_BY_DIFFICULTY = {
   easy: 12,
@@ -1033,20 +902,12 @@ const QUESTIONS_PER_ROUND_BY_DIFFICULTY = {
   hard: 14
 };
 const REWARD_TABLE = {
-  easy:   { base: 3, completion: 8 },
-  normal: { base: 5, completion: 12 },
-  hard:   { base: 7, completion: 16 }
+  easy:   { base: 2, streak3: 1, streak6: 1, completion: 10 },
+  normal: { base: 4, streak3: 2, streak6: 2, completion: 15 },
+  hard:   { base: 6, streak3: 3, streak6: 3, completion: 20 }
 };
 
 let state = {};
-let selectedRoute = 0;
-
-ALL_QUESTIONS.forEach((q, i) => {
-  if (!q.pathAffinity) q.pathAffinity = ['safe', 'treasure', 'mixed'][i % 3];
-  if (!q.rewardBand) q.rewardBand = ['safe', 'challenge', 'mystery'][i % 3];
-  if (!q.cognitiveLoad) q.cognitiveLoad = q.difficulty === 'easy' ? 'low' : (q.difficulty === 'normal' ? 'mid' : 'high');
-  if (!q.distractorStrength) q.distractorStrength = q.difficulty === 'easy' ? 1 : (q.difficulty === 'normal' ? 2 : 3);
-});
 
 // ================================================================
 // SOUND EFFECTS SYSTEM
@@ -1122,28 +983,44 @@ function playSound(type) {
 }
 
 function startGame(difficulty) {
+  // Filter questions by difficulty
   const filteredQuestions = ALL_QUESTIONS.filter(q => q.difficulty === difficulty);
+  const bossQuestion = CHEST_QUESTIONS[difficulty];
+
+  // Pick random questions without repeats
+  const pickQuestions = (count, includeBossQuestion = false) => {
+    const pool = [...filteredQuestions];
+    const picks = [];
+    const normalQuestionCount = includeBossQuestion ? Math.max(0, count - 1) : count;
+
+    for (let i = 0; i < normalQuestionCount; i++) {
+      if (pool.length === 0) break;
+      const idx = Math.floor(Math.random() * pool.length);
+      const chosenQuestion = pool.splice(idx, 1)[0];
+      picks.push({ ...chosenQuestion, a: [...chosenQuestion.a] });
+    }
+
+    if (includeBossQuestion && bossQuestion) {
+      picks.push({ ...bossQuestion, a: [...bossQuestion.a] });
+    }
+
+    return picks;
+  };
+
   const questionsPerRound = QUESTIONS_PER_ROUND_BY_DIFFICULTY[difficulty] ?? QUESTIONS_PER_ROUND;
 
   state = {
-    hearts: 5,
-    answered: 0,
-    streak: 0,
-    total: 0,
-    correct: 0,
-    coins: 0,
+    hearts:    5,
+    answered:  0,
+    streak:    0,        // consecutive correct answers
+    total:     0,        // total answers given
+    correct:   0,        // total correct answers
+    coins:     0,        // collected coins
     difficulty: difficulty,
     questionsPerRound: questionsPerRound,
-    questions: filteredQuestions.map(q => ({ ...q, a: [...q.a] })),
-    usedQuestionKeys: new Set(),
-    pathChoiceHistory: [],
-    currentRoute: null,
-    inventory: { hints: 1, shields: 0, doubleCoins: 0 },
-    pendingDoubleCoins: false,
-    inBoss: false,
-    bossPhase: 0,
-    busy: false,
-    current: null
+    questions: pickQuestions(questionsPerRound, true),
+    busy:      false,
+    current:   null,
   };
 
   document.getElementById('panel').style.display = 'flex';
@@ -1156,10 +1033,8 @@ function startGame(difficulty) {
   resetPet();
   resetStars();
   resetChest();
-  renderInventory();
-  renderBossPhase();
   setOverlay(null);
-  showRouteChooser();
+  loadQuestion(state.questions[0]);
 }
 
 function initGame() {
@@ -1167,103 +1042,24 @@ function initGame() {
   setOverlay('difficulty-screen');
 }
 
-function showRouteChooser() {
-  state.current = null;
-  state.currentRoute = null;
-  selectedRoute = 0;
-  selectedAnswer = null;
-  document.getElementById('route-chooser').classList.add('active');
-  highlightRouteSelection(selectedRoute);
-  document.getElementById('q-type').textContent = 'Choose Route';
-  document.getElementById('q-text').textContent = 'Pick a trail before this checkpoint.';
-  setAnswerButtonsEnabled(false);
-  showFeedback('info', 'Safe trail = steadier rewards. Treasure trail = bigger rewards + more risk.');
-  renderInventory();
-  renderBossPhase();
-}
-
-function chooseRoute(route) {
-  if (state.busy || state.inBoss || state.answered >= getRoundQuestionCount()) return;
-  state.currentRoute = route;
-  state.pathChoiceHistory.push(route);
-  document.getElementById('route-chooser').classList.remove('active');
-  const nextQ = pickQuestionByRoute(route);
-  if (!nextQ) {
-    startBossMode();
-    return;
-  }
-  loadQuestion(nextQ);
-}
-
-function pickQuestionByRoute(route) {
-  const unused = state.questions.filter(q => !state.usedQuestionKeys.has(q.q));
-  if (!unused.length) return null;
-
-  let candidates = unused.filter(q => q.pathAffinity === route || q.pathAffinity === 'mixed');
-  if (route === 'safe') {
-    const lighter = candidates.filter(q => q.cognitiveLoad !== 'high');
-    if (lighter.length) candidates = lighter;
-  } else {
-    const stronger = candidates.filter(q => q.distractorStrength >= 2);
-    if (stronger.length) candidates = stronger;
-  }
-  if (!candidates.length) candidates = unused;
-
-  const chosen = candidates[Math.floor(Math.random() * candidates.length)];
-  state.usedQuestionKeys.add(chosen.q);
-  return { ...chosen, a: [...chosen.a] };
-}
-
-function startBossMode() {
-  state.inBoss = true;
-  state.bossPhase = 0;
-  renderBossPhase();
-  loadBossQuestion();
-}
-
-function loadBossQuestion() {
-  const phases = BOSS_PHASES[state.difficulty] || [];
-  const phaseQ = phases[state.bossPhase];
-  if (!phaseQ) {
-    finishRun();
-    return;
-  }
-  const q = {
-    ...phaseQ,
-    difficulty: state.difficulty,
-    pathAffinity: 'mixed',
-    rewardBand: state.bossPhase === 2 ? 'mystery' : 'challenge',
-    cognitiveLoad: 'high',
-    distractorStrength: 3
-  };
-  loadQuestion(q);
-  showFeedback('info', state.bossPhase === 1 ? 'Boss phase 2: use power-ups now if needed.' : 'Boss battle phase!');
-}
-
 // ================================================================
 // QUESTION DISPLAY
 // ================================================================
 function loadQuestion(qObj) {
-  state.current = { ...qObj, a: [...qObj.a] };
+  state.current = qObj;
   document.getElementById('q-type').textContent = stripEmojiHints(qObj.type);
   document.getElementById('q-text').textContent = stripEmojiHints(qObj.q);
-  document.getElementById('feedback').textContent = '';
+  document.getElementById('feedback').textContent = '';  // clear feedback
 
-  // Build less-obvious options by borrowing plausible distractors from same topic/difficulty.
-  const correctAnswer = qObj.a[qObj.ok];
-  const distractorPool = ALL_QUESTIONS
-    .filter(other => other !== qObj && other.difficulty === qObj.difficulty && other.type === qObj.type)
-    .map(other => other.a[other.ok])
-    .filter(ans => ans !== correctAnswer);
+  // Shuffle answers and track new correct index
+  const answerIndices = [0, 1, 2];
+  const shuffledIndices = shuffle([...answerIndices]);
+  const newAnswers = shuffledIndices.map(i => stripEmojiHints(qObj.a[i]));
+  const newCorrectIndex = shuffledIndices.indexOf(qObj.ok);
 
-  const uniqueDistractors = [...new Set(distractorPool)];
-  shuffle(uniqueDistractors);
-  const fallbackDistractors = qObj.a.filter((_, i) => i !== qObj.ok);
-  const distractors = [...uniqueDistractors, ...fallbackDistractors].slice(0, 2);
-  const candidateAnswers = shuffle([correctAnswer, ...distractors].slice(0, 3));
-
-  state.current.a = candidateAnswers.map(stripEmojiHints);
-  state.current.ok = state.current.a.indexOf(stripEmojiHints(correctAnswer));
+  // Store current question with shuffled answers
+  state.current.a = newAnswers;
+  state.current.ok = newCorrectIndex;
 
   const btns   = document.querySelectorAll('.btn');
   const labels = ['A', 'B', 'C'];
@@ -1271,12 +1067,7 @@ function loadQuestion(qObj) {
     btn.textContent = labels[i] + ') ' + state.current.a[i];
     btn.disabled    = false;
     btn.className   = 'btn btn-' + ['a', 'b', 'c'][i];
-    btn.style.opacity = '';
   });
-
-  renderInventory();
-  renderBossPhase();
-  state.busy = false;
 }
 
 // ================================================================
@@ -1288,52 +1079,47 @@ function answer(idx) {
 
   const btns = document.querySelectorAll('.btn');
   btns.forEach(b => b.disabled = true);
-  renderInventory();
 
   const qObj = state.current;
 
   state.total++;
 
   if (idx === qObj.ok) {
+    // ✅ Correct
     playSound('correct');
     state.correct++;
     state.streak++;
-    const outcome = getCoinsForCorrectAnswer();
-    state.coins += outcome.coins;
-    state.inventory.hints += outcome.hints;
-    state.inventory.shields += outcome.shields;
-    state.inventory.doubleCoins += outcome.doubleCoins;
+    
+    // Award coins based on difficulty, streak, and completion bonus.
+    const coinsEarned = getCoinsForCorrectAnswer();
+    
+    state.coins += coinsEarned;
     renderCoins();
-    showCoinPopup(outcome.coins);
+    showCoinPopup(coinsEarned);
+    
     renderStreak();
-    renderInventory();
-    showFeedback('correct', outcome.message);
+    showFeedback('correct', 'Correct! Great job!');
     btns[idx].classList.add('flash-ok');
     petHop();
     setTimeout(onCorrect, 600);
   } else {
+    // ❌ Wrong — lose a heart
     playSound('wrong');
-    state.streak = 0;
+    state.streak = 0;  // reset streak on wrong answer
     renderStreak();
-    const correctAnswer = String.fromCharCode(65 + qObj.ok);
-    let feedback = `Wrong! The correct answer is ${correctAnswer}: ${qObj.a[qObj.ok]}`;
-    if (state.inventory.shields > 0) {
-      state.inventory.shields--;
-      feedback = 'Wrong, but your shield protected this heart.';
-    } else {
-      state.hearts--;
-    }
+    const correctAnswer = String.fromCharCode(65 + qObj.ok);  // Convert index to A, B, C
+    const feedback = `Wrong! The correct answer is ${correctAnswer}: ${qObj.a[qObj.ok]}`;
     showFeedback('wrong', feedback);
     btns[idx].classList.add('flash-no');
+    state.hearts--;
     renderHearts();
-    renderInventory();
     shakeHero();
 
     if (state.hearts <= 0) {
       setTimeout(() => setOverlay('lose-screen'), 900);
     } else {
       setTimeout(() => {
-        loadQuestion(qObj);
+        loadQuestion(qObj);   // same question again
         state.busy = false;
       }, 900);
     }
@@ -1341,17 +1127,6 @@ function answer(idx) {
 }
 
 function onCorrect() {
-  if (state.inBoss) {
-    state.bossPhase++;
-    if (state.bossPhase >= BOSS_PHASE_COUNT) {
-      finishRun();
-      return;
-    }
-    loadBossQuestion();
-    state.busy = false;
-    return;
-  }
-
   state.answered++;
   renderProgress();
   updateCheckpointStars();
@@ -1359,9 +1134,11 @@ function onCorrect() {
   const nextPetPercent = getPetPercentForHero(nextHeroPercent);
 
   if (state.answered >= getRoundQuestionCount()) {
+    // Round complete — WIN!
     moveHeroToPercent(nextHeroPercent, true, () => {
       movePetToPercent(nextPetPercent, true);
-      startBossMode();
+      openChest();
+      setTimeout(() => setOverlay('win-screen'), 1200);
     });
     return;
   }
@@ -1369,13 +1146,8 @@ function onCorrect() {
   moveHeroToPercent(nextHeroPercent, true, () => {
     movePetToPercent(nextPetPercent, true);
     state.busy = false;
-    showRouteChooser();
+    loadQuestion(state.questions[state.answered]);
   });
-}
-
-function finishRun() {
-  openChest();
-  setTimeout(() => setOverlay('win-screen'), 1200);
 }
 
 // ================================================================
@@ -1529,81 +1301,13 @@ function getPetPercentForHero(heroPercent) {
 
 function getCoinsForCorrectAnswer() {
   const rewards = REWARD_TABLE[state.difficulty] || REWARD_TABLE.normal;
-  const route = state.inBoss ? 'boss' : (state.currentRoute || 'safe');
-  const routeMultiplier = route === 'treasure' ? 1.5 : (route === 'boss' ? 1.4 : 1);
-  const bandBonus = state.current.rewardBand === 'mystery' ? 3 : (state.current.rewardBand === 'challenge' ? 2 : 0);
-  const streakBonus = Math.floor(state.streak / 3);
-  let coins = Math.round((rewards.base + bandBonus + streakBonus) * routeMultiplier);
+  let coins = rewards.base;
 
-  if (!state.inBoss && state.answered + 1 === getRoundQuestionCount()) {
-    coins += rewards.completion;
-  }
+  if (state.streak >= 3) coins += rewards.streak3;
+  if (state.streak >= 6) coins += rewards.streak6;
+  if (state.answered + 1 === getRoundQuestionCount()) coins += rewards.completion;
 
-  let boostText = '';
-  if (state.pendingDoubleCoins) {
-    coins *= 2;
-    state.pendingDoubleCoins = false;
-    boostText = ' Double coins used.';
-  }
-
-  const event = getRouteEvent(route, state.current.rewardBand, state.inBoss);
-  coins += event.coins;
-  const routeLabel = route === 'treasure' ? 'Treasure Trail' : (route === 'safe' ? 'Safe Trail' : 'Boss');
-
-  return {
-    coins,
-    hints: event.hints,
-    shields: event.shields,
-    doubleCoins: event.doubleCoins,
-    message: `Correct! ${routeLabel} reward: ${coins} coins.${event.message}${boostText}`
-  };
-}
-
-function getRouteEvent(route, rewardBand, isBoss) {
-  const roll = Math.random();
-  const event = { coins: 0, hints: 0, shields: 0, doubleCoins: 0, message: '' };
-
-  if (isBoss) {
-    if (roll < 0.25) {
-      event.coins = 6;
-      event.message = ' Boss bonus +6.';
-    } else if (roll < 0.38) {
-      event.shields = 1;
-      event.message = ' Found shield.';
-    }
-    return event;
-  }
-
-  if (route === 'safe') {
-    if (roll < 0.28) {
-      event.hints = 1;
-      event.message = ' Found hint.';
-    } else if (roll < 0.40) {
-      event.shields = 1;
-      event.message = ' Found shield.';
-    } else if (roll < 0.60) {
-      event.coins = 2;
-      event.message = ' Bonus +2.';
-    }
-  } else {
-    if (roll < 0.26) {
-      event.doubleCoins = 1;
-      event.message = ' Earned Double Coins.';
-    } else if (roll < 0.38) {
-      event.shields = 1;
-      event.message = ' Found shield.';
-    } else if (roll < 0.68) {
-      event.coins = 4;
-      event.message = ' Treasure bonus +4.';
-    }
-  }
-
-  if (rewardBand === 'mystery' && Math.random() < 0.2) {
-    event.coins += 3;
-    event.message += ' Mystery +3.';
-  }
-
-  return event;
+  return coins;
 }
 
 function stripEmojiHints(text) {
@@ -1635,36 +1339,6 @@ function renderDifficultyBadge() {
 
 function renderCoins() {
   document.getElementById('coin-display').textContent = `💰 ${state.coins}`;
-}
-
-function renderInventory() {
-  const hints = state.inventory?.hints ?? 0;
-  const shields = state.inventory?.shields ?? 0;
-  const doubles = state.inventory?.doubleCoins ?? 0;
-
-  document.getElementById('hint-count').textContent = hints;
-  document.getElementById('double-count').textContent = doubles;
-  document.getElementById('shield-count').textContent = shields;
-
-  const noQuestion = !state.current || state.busy;
-  document.getElementById('hint-btn').disabled = hints <= 0 || noQuestion;
-  document.getElementById('double-btn').disabled = doubles <= 0 || state.pendingDoubleCoins || noQuestion;
-}
-
-function renderBossPhase() {
-  const el = document.getElementById('boss-phase');
-  if (!state.inBoss) {
-    el.textContent = '';
-    return;
-  }
-  el.textContent = `Boss Phase ${state.bossPhase + 1} / ${BOSS_PHASE_COUNT}`;
-}
-
-function setAnswerButtonsEnabled(enabled) {
-  document.querySelectorAll('.btn').forEach(btn => {
-    btn.disabled = !enabled;
-    if (!enabled) btn.style.outline = 'none';
-  });
 }
 
 function showCoinPopup(amount) {
@@ -1730,33 +1404,6 @@ function showFeedback(type, message) {
   feedbackEl.className = type;
 }
 
-function useHint() {
-  if (state.busy || !state.current || state.inventory.hints <= 0) return;
-  const btns = document.querySelectorAll('.btn');
-  const wrong = [0, 1, 2].filter(i => i !== state.current.ok && !btns[i].disabled);
-  if (!wrong.length) return;
-  const idx = wrong[Math.floor(Math.random() * wrong.length)];
-  btns[idx].disabled = true;
-  btns[idx].style.opacity = '0.35';
-  state.inventory.hints--;
-  renderInventory();
-  showFeedback('info', 'Hint used: one wrong answer removed.');
-}
-
-function useDoubleCoins() {
-  if (state.busy || !state.current || state.inventory.doubleCoins <= 0 || state.pendingDoubleCoins) return;
-  state.inventory.doubleCoins--;
-  state.pendingDoubleCoins = true;
-  renderInventory();
-  showFeedback('info', 'Double Coins armed for the next correct answer.');
-}
-
-function highlightRouteSelection(idx) {
-  document.querySelectorAll('.route-btn').forEach((btn, i) => {
-    btn.classList.toggle('selected', i === idx);
-  });
-}
-
 function resetStars() {
   for (let i = 1; i <= 5; i++) {
     document.getElementById('cp' + i).classList.remove('lit');
@@ -1783,9 +1430,6 @@ function resetGame() {
   document.querySelectorAll('.confetti').forEach(el => el.remove());
   document.getElementById('hero').classList.remove('celebrate', 'walk', 'shake');
   document.getElementById('pet').classList.remove('celebrate');
-  document.getElementById('route-chooser').classList.remove('active');
-  document.getElementById('boss-phase').textContent = '';
-  showFeedback('info', '');
   setOverlay('difficulty-screen');
 }
 
@@ -1803,50 +1447,19 @@ function shuffle(arr) {
 let selectedAnswer = null;  // Track currently selected answer with arrow keys
 
 document.addEventListener('keydown', (e) => {
-  const overlayVisible = ['difficulty-screen', 'win-screen', 'lose-screen']
-    .some(id => document.getElementById(id).style.display === 'flex');
-  if (overlayVisible) return;
-
-  const routeOpen = document.getElementById('route-chooser').classList.contains('active');
-  if (routeOpen) {
-    if (e.key === 'ArrowLeft') {
-      e.preventDefault();
-      selectedRoute = 0;
-      highlightRouteSelection(selectedRoute);
-    } else if (e.key === 'ArrowRight') {
-      e.preventDefault();
-      selectedRoute = 1;
-      highlightRouteSelection(selectedRoute);
-    } else if (e.key === '1' || e.key === 'a' || e.key === 'A') {
-      chooseRoute('safe');
-    } else if (e.key === '2' || e.key === 'd' || e.key === 'D') {
-      chooseRoute('treasure');
-    } else if (e.key === 'Enter') {
-      chooseRoute(ROUTES[selectedRoute]);
-    }
-    return;
-  }
-
-  if (e.key === 'h' || e.key === 'H') {
-    useHint();
-    return;
-  }
-
-  if (e.key === 'x' || e.key === 'X') {
-    useDoubleCoins();
-    return;
-  }
-
+  // Number keys: 1, 2, 3 to select answer directly
   if (e.key === '1' || e.key === 'a' || e.key === 'A') {
-    selectedAnswer = 0;
     answer(0);
+    selectedAnswer = 0;
   } else if (e.key === '2' || e.key === 'b' || e.key === 'B') {
-    selectedAnswer = 1;
     answer(1);
+    selectedAnswer = 1;
   } else if (e.key === '3' || e.key === 'c' || e.key === 'C') {
-    selectedAnswer = 2;
     answer(2);
-  } else if (e.key === 'ArrowLeft') {
+    selectedAnswer = 2;
+  }
+  // Arrow keys: navigate between answers
+  else if (e.key === 'ArrowLeft') {
     e.preventDefault();
     if (selectedAnswer === null) selectedAnswer = 0;
     else selectedAnswer = (selectedAnswer - 1 + 3) % 3;
@@ -1856,7 +1469,9 @@ document.addEventListener('keydown', (e) => {
     if (selectedAnswer === null) selectedAnswer = 0;
     else selectedAnswer = (selectedAnswer + 1) % 3;
     highlightButton(selectedAnswer);
-  } else if (e.key === 'Enter' && selectedAnswer !== null) {
+  }
+  // Enter: confirm selected answer
+  else if (e.key === 'Enter' && selectedAnswer !== null) {
     e.preventDefault();
     answer(selectedAnswer);
   }
