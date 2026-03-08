@@ -1,314 +1,100 @@
-# Hero Victor - Game Architecture Guide
+# Hero Victor - Architecture Guide
 
-## Quick Overview
-Hero Victor is a single-file, self-contained educational trivia game. Everything is in `hero-victor.html` - no external dependencies, frameworks, or separate asset files.
+## Overview
+This repository now contains two playable HTML builds:
+- `hero-victor.html` -> classic/legacy experience.
+- `hero-victor1.html` -> new guided branching adventure.
 
-**Key Facts:**
-- **File Structure:** Just `index.html` (redirect) and `hero-victor.html` (main game)
-- **Game Type:** Educational trivia/quiz adventure for children
-- **Architecture:** Pure vanilla JavaScript + inline CSS + inline SVG graphics
-- **Deployment:** Perfect for GitHub Pages
+Both builds are single-file, self-contained browser games using vanilla JavaScript, inline CSS, and inline SVG.
 
----
+## File Layout
+- `index.html`: landing/redirect page.
+- `hero-victor.html`: classic gameplay.
+- `hero-victor1.html`: enhanced gameplay (routes, power-ups, boss phases).
+- `README.md`: user-facing overview.
+- `GAME_ARCHITECTURE.md`: this reference.
 
-## Game Mechanics at a Glance
+## `hero-victor1.html` Core Systems
 
-### Goal
-Guide a hero character across a road by answering 5 trivia questions correctly (at your chosen difficulty), then answer a final "boss question" to open the treasure chest and win.
+### Game Flow
+1. Select difficulty.
+2. Before each checkpoint, choose route (`safe` or `treasure`).
+3. Answer a route-selected question.
+4. Receive dynamic reward + optional event (coins/power-up).
+5. Repeat until checkpoint target reached.
+6. Enter 3-phase boss sequence.
+7. Win by clearing boss phase 3 and opening chest.
 
-### Flow
-1. **Select Difficulty** → Choose Easy, Normal, or Hard
-2. **Answer Question 1-5** → Correct = hero moves forward to checkpoint, wrong = lose 1 heart
-3. **Answer Boss Question** → Correct = open chest & win, wrong = lose 1 heart
-4. **Game Over** at 0 hearts remaining (lose) OR after opening chest (win)
+### State Model (key fields)
+- `hearts`, `answered`, `streak`, `total`, `correct`, `coins`
+- `difficulty`, `questionsPerRound`
+- `questions`, `usedQuestionKeys`
+- `pathChoiceHistory`, `currentRoute`
+- `inventory: { hints, shields, doubleCoins }`
+- `pendingDoubleCoins`
+- `inBoss`, `bossPhase`
+- `busy`, `current`
 
-### Restart
-Player can restart by clicking the restart button after win/lose screens, which returns to difficulty selector
+### Route System
+- Route chooser shown every checkpoint (`#route-chooser`).
+- `chooseRoute(route)` stores choice and loads route-biased question.
+- `pickQuestionByRoute(route)` filters by `pathAffinity` and falls back safely when needed.
 
-### Difficulty Levels
-- **🌱 Easy:** 26 basic questions (14 math, 12 science) - Good for beginners
-- **⭐ Normal:** 26 moderate questions (13 math, 13 science) - Balanced challenge
-- **🔥 Hard:** 28 advanced questions (14 math, 14 science) - Expert challenge
+### Question Difficulty Shaping
+- Questions include metadata:
+  - `pathAffinity`: `safe | treasure | mixed`
+  - `rewardBand`: `safe | challenge | mystery`
+  - `cognitiveLoad`
+  - `distractorStrength`
+- `loadQuestion()` rebuilds options with plausible distractors from similar questions to reduce obvious answers while staying age-appropriate.
 
----
+### Rewards and Events
+- `getCoinsForCorrectAnswer()` computes dynamic rewards from:
+  - base reward by difficulty,
+  - route multiplier,
+  - reward band,
+  - streak bonus,
+  - completion bonus,
+  - optional double-coins multiplier,
+  - event bonuses.
+- `getRouteEvent()` may grant:
+  - extra coins,
+  - hint,
+  - shield,
+  - double-coins token.
 
-## Code Structure
+### Power-Ups
+- UI: `#powerups` with `Hint`, `Double Coins`, and shield counter.
+- `useHint()`: disables one wrong answer.
+- `useDoubleCoins()`: arms multiplier for next correct answer.
+- Shield is consumed automatically on wrong answer to prevent heart loss.
 
-### State Management
-```javascript
-state = {
-  hearts: 5,           // Remaining lives (start with 5)
-  answered: 0,         // Number of checkpoints completed (0-5)
-  streak: 0,           // Consecutive correct answers
-  total: 0,            // Total answers given
-  correct: 0,          // Total correct answers
-  difficulty: "normal",// Selected difficulty ("easy", "normal", "hard")
-  questions: [],       // Shuffled questions for this playthrough (5 questions)
-  finalMode: false,    // Flag: currently on the boss question?
-  busy: false,         // Flag: is a transition/animation in progress?
-  current: null        // Current question object being displayed
-}
-```
+### Boss System
+- `BOSS_PHASES` defines 3 boss questions per difficulty.
+- `startBossMode()` enters boss state.
+- `loadBossQuestion()` advances and renders each phase.
+- `renderBossPhase()` updates `#boss-phase` indicator.
+- Win only after final boss phase resolves.
 
-### Main Game Functions (in execution order)
+### Keyboard Input
+- Route navigation and selection.
+- Answer navigation and submit.
+- Power-up hotkeys (`H`, `X`).
 
-#### Initialization
-- **`initGame()`** - Called on page load
-  - Displays difficulty selector overlay
-  - Waits for player to choose difficulty level
-- **`startGame(difficulty)`** - Called when player selects difficulty
-  - Filters questions by selected difficulty
-  - Resets state to starting values
-  - Shuffles filtered questions array
-  - Loads first question
-  - Shows game UI with difficulty badge
+## UI Areas (`hero-victor1.html`)
+- World area: hero, pet, checkpoints, chest, hearts, coins, progress.
+- Question panel additions:
+  - `#boss-phase`
+  - `#route-chooser`
+  - `#powerups`
+  - answer buttons + `#feedback`
 
-#### Question Loading
-- **`loadQuestion()`** - Loads next question from `state.questions` or enters final mode
-  - Updates `state.current` with new question
-  - If `state.answered === 5`, switch to final mode (boss question)
-  - Updates UI with question text and answer buttons
+## Deployment Notes
+GitHub Pages serves both URLs independently:
+- `/hero-victor/hero-victor.html` (classic)
+- `/hero-victor/hero-victor1.html` (new)
 
-#### User Interaction
-- **`answer(index)`** - Called when player clicks answer button
-  - `index` = which button clicked (0, 1, or 2)
-  - Checks if `index === state.current.ok` (correct answer index)
-  - **If correct:** Moves hero, lights checkpoint, loads next question
-  - **If wrong:** Shakes hero, loses 1 heart, reloads same question
-  - Prevents interaction while busy (`state.busy` flag)
-
-#### Hero Movement
-- **`moveHero()`** - Animates hero from current position to next position
-  - Uses `STOPS` array to determine positions: `[50, 200, 350, 500, 650, 800, 880]`
-  - CSS transition handles animation (0.9s cubic-bezier)
-  - Increments `state.answered`
-  - Lights up corresponding checkpoint star
-
-#### Visual Feedback
-- **`flash(color, duration)`** - Flash the entire question panel
-  - Green = correct answer
-  - Red = wrong answer
-- **`shakeHero()`** - Wiggle animation when wrong
-- **`animateConfetti()`** - Particle effect on win (55 particles, multiple colors)
-- **`celebrate()`** - Hero celebration jump animation
-
-#### Win/Lose Conditions
-- **`checkWin()`** - Checks if both conditions met:
-  1. `state.answered === 5` (completed all checkpoints)
-  2. Just answered the boss question correctly
-- **`checkLose()`** - Checks if `state.hearts === 0`
-
----
-
-## Question Data Structure
-
-### Format
-```javascript
-{
-  type: "Math ➕",                    // Category with emoji
-  q: "What is 5 + 3?",              // Question text
-  a: ["7", "8", "9"],               // Three answer options (A, B, C)
-  ok: 1,                            // Index of correct answer (0, 1, or 2)
-  difficulty: "easy"                // Difficulty level: "easy", "normal", or "hard"
-}
-```
-
-### Question Pool by Difficulty
-- **Easy (26 questions):** 14 math, 12 science - Basic concepts
-- **Normal (26 questions):** 13 math, 13 science - Intermediate difficulty
-- **Hard (28 questions):** 14 math, 14 science - Advanced topics
-- **Total Pool:** 74+ questions available
-- **Per Game:** 5 random questions of selected difficulty + 1 difficulty-specific boss question
-
-### Key Questions Arrays
-- **`ALL_QUESTIONS`** - All 74+ available questions with difficulty levels
-- **`state.questions`** - Shuffled subset (5 questions of selected difficulty)
-- **`CHEST_QUESTIONS`** - Object with boss questions for each difficulty:
-  - `CHEST_QUESTIONS.easy` - Easy boss question
-  - `CHEST_QUESTIONS.normal` - Normal boss question
-  - `CHEST_QUESTIONS.hard` - Hard boss question
-
----
-
-## DOM Elements & CSS Classes
-
-### Game Container
-- **ID:** `#gameContainer` (900px × 580px)
-- **Layout:** Two sections (60% world, 40% questions)
-
-### World Section (Upper)
-- **ID:** `#world` - Game canvas area
-- **`#hero`** - SVG hero character (positioned via `left` CSS property)
-  - Positions: `left: 50px, 200px, 350px, 500px, 650px, 800px, 880px`
-  - Animation class: `.walk` (moves hero with bob animation)
-- **`#chest`** - SVG treasure chest (right side)
-  - Animation class: `.open` (opens on win)
-- **`#clouds`** - Animated background clouds
-- **`.checkpoint`** - Star elements (5 total)
-  - ID: `#check1` through `#check5`
-  - Animation class: `.active` (glows when passed)
-- **`#lifeDisplay`** - Heart counter (shows remaining hearts)
-
-### Question Section (Lower)
-- **ID:** `#questionPanel` - Question UI container
-- **`#questionType`** - Category label (e.g., "Math ➕")
-- **`#questionText`** - Question text display
-- **`.answerBtn`** - Answer buttons (3 total)
-  - IDs: `#btn0`, `#btn1`, `#btn2`
-  - Content: "A", "B", "C" with option text
-
-### Game Over Screens
-- **ID:** `#winScreen` - Hidden until win condition met
-  - Contains restart button
-- **ID:** `#loseScreen`** - Hidden until lose condition met
-  - Contains restart button
-
----
-
-## Key CSS Animations
-
-### Hero Animations
-- **`.walk`** - Moves hero with bobbing motion (0.9s)
-  - Used during `moveHero()`
-- **`.shake`** - Wiggle animation (0.5s)
-  - Used on wrong answer in `shakeHero()`
-- **`.celebrate`** - Jump/celebration animation
-  - Used on final correct answer in `celebrate()`
-
-### Checkpoint Animations
-- **`.active`** - Glow effect (star lights up)
-  - Applied after hero passes checkpoint
-
-### Visual Feedback
-- **`.flash.correct`** - Green background flash (0.3s)
-- **`.flash.wrong`** - Red background flash (0.3s)
-
-### Confetti
-- **`.confetti`** - Falling particle animation (2-4s)
-  - Generated dynamically in `animateConfetti()`
-  - Multiple colors (random from color array)
-
----
-
-## Event Listeners
-
-### Initialization
-- **`window.addEventListener('load', initGame)`** - Start game on page load
-
-### User Interaction
-- **Button clicks:** `.answerBtn` elements trigger `answer(0/1/2)`
-- **Restart buttons:** Trigger `location.reload()` to reset game
-
----
-
-## Visual Layout
-
-```
-┌─────────────────────────────────────────┐
-│          WORLD (60%)                    │
-│  ☁️ ☁️                                   │
-│  🌳━━━⭐━━━⭐━━━⭐━━━⭐━━━⭐━━━🏆       │
-│      🧑                                  │
-│  ❤️❤️❤️❤️❤️  Progress: 1/6              │
-├─────────────────────────────────────────┤
-│       QUESTIONS (40%)                   │
-│  Math ➕                                 │
-│  What is 5 + 3?                        │
-│  [ A: 7 ] [ B: 8 ] [ C: 9 ]           │
-└─────────────────────────────────────────┘
-```
-
----
-
-## Recent Improvements (Interactive Version)
-
-### ✅ Difficulty System
-- **Three Game Modes:**
-  - 🌱 Easy: 26 questions covering basic concepts
-  - ⭐ Normal: 26 questions with moderate challenge
-  - 🔥 Hard: 28 questions featuring advanced topics
-- **Difficulty Selection Screen:** Appears on game start
-- **Separate Boss Questions:** Each difficulty has its own final challenge
-- **Visual Difficulty Badge:** Shows current mode during gameplay
-- **74+ Total Questions:** Large question pool prevents repetition
-
-### ✅ Keyboard Support
-- **Number Keys:** Press `1`, `2`, or `3` to select answers directly
-- **Letter Keys:** Press `A`, `B`, or `C` to answer
-- **Arrow Keys:** Use left/right arrows to navigate between buttons
-- **Enter Key:** Press Enter to confirm selected answer with visual outline
-
-### ✅ Enhanced Visual Feedback
-- **Button Animations:**
-  - Hover: lift up with shadow effect
-  - Click: responsive press animation
-  - Flash: brighter, more pronounced feedback (correct/wrong)
-- **Button Focus States:** White outline when keyboard-navigated
-- **Hero Animations:** Enhanced celebration jump with rotation
-- **Question Panel:** Smooth fade-in animations
-- **Interactive Transitions:** Smooth state changes with CSS animations
-
-### ✅ Score Tracking & Statistics
-- **Streak Counter:** 🔥 Displays consecutive correct answers
-  - Green at 0-2
-  - Gold/orange at 3+ (hot streak!)
-  - Resets on wrong answer
-- **Accuracy Tracking:**
-  - Total answers counted
-  - Correct answers tracked
-  - Accuracy percentage calculated
-  - Shown on win/lose screens
-- **Game Stats Display:** Shows performance metrics after each game
-
-### ✅ Answer Feedback Messages
-- **Correct Feedback:** Green "✅ Correct! Great job!" message
-- **Wrong Feedback:** Red message showing correct answer (e.g., "❌ Wrong! The correct answer is B: 8")
-- **Instant Learning:** Feedback clears when loading next question
-- **Smooth Animations:** Messages fade in smoothly
-
-## Remaining Enhancement Opportunities
-
-### Potential Future Improvements
-1. **Sound Effects** - Correct/wrong answer sounds, level up effects
-2. **Hint System** - Use hearts to get hints on difficult questions
-3. **Leaderboard** - Track best scores/times per difficulty
-4. **Accessibility** - Screen reader support, better keyboard navigation
-5. **Mobile Touch** - Better mobile/touch interface and button sizes
-6. **Question Categories Filter** - Let players choose specific subjects
-7. **Power-ups** - Extra hearts, answer revealed, or time bonus
-8. **Timed Questions** - Countdown timer for additional challenge
-9. **Custom Questions** - Allow users to add and share their own questions
-10. **Multiplayer Mode** - Competitive or collaborative play
-
----
-
-## Debugging Tips
-
-### Check Game State
-- Open browser console and type: `console.log(state)`
-- Check current question: `state.current`
-- Check hearts: `state.hearts`
-- Check progress: `state.answered`
-
-### Common Issues
-- **Hero not moving:** Check `state.busy` flag and animation completion
-- **Questions not loading:** Check `state.questions` array is populated
-- **Buttons not responding:** Check `state.busy` flag during animations
-- **Win/lose not triggering:** Verify both conditions in `checkWin()` and `checkLose()`
-
----
-
-## File Sizes
-- **index.html:** 149 bytes (redirect)
-- **hero-victor.html:** ~21,668 bytes (complete game)
-- **Total:** ~22 KB (single file deployment)
-
----
-
-## Next Session Checklist
-When returning to improve the game:
-1. Read this guide first (skip full code review)
-2. Use function names and locations in this guide to navigate
-3. Identify specific functions to modify for improvements
-4. Make one improvement per commit for clarity
-5. Update this guide with any new functions or major changes
+## Debug Tips
+- `console.log(state)` for current run internals.
+- Verify route flow by checking `state.pathChoiceHistory` growth each checkpoint.
+- Verify boss progression with `state.inBoss` and `state.bossPhase`.
